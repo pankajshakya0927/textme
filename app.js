@@ -16,7 +16,7 @@ app.use((req, res, next) => {
   next();
 });
 
-// user routes
+// user route
 app.use("/api/user", userRoute);
 
 // serve the static files

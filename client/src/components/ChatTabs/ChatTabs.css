@@ -4,10 +4,6 @@
     padding: 10px;
 }
 
-.search {
-    padding: 11.6px 0;
-}
-
 .chatName {
     overflow-y: auto;
     height: calc(100vh - 159px) !important;
