@@ -103,11 +103,12 @@ function Signup() {
 
   const signupHandler = (event) => {
     event.preventDefault();
+    
     const container = document.getElementById("toastr");
     const root = createRoot(container);
 
     if (!username || !password) {
-      root.render(<Toastr variant="Danger" title="Error" message="Invalid username or password" />);
+      root.render(<Toastr variant="Danger" title="Error" message="username or password can't be empty" />);
     } else {
       const config = {
         "Content-type": "application/json",

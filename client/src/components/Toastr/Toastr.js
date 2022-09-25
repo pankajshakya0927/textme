@@ -5,7 +5,6 @@ import ToastContainer from "react-bootstrap/ToastContainer";
 import Toast from "react-bootstrap/Toast";
 
 function Toastr(props) {
-  console.log(props);
   const [show, setShow] = useState(true);
   const toggleShow = () => setShow(!show);
 

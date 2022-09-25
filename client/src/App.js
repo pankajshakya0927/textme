@@ -17,7 +17,7 @@ function App() {
       <Route exact path="/login" component={Login}>
         <Login />
       </Route>
-      <Route exact path="/" component={ChatTabs}>
+      <Route exact path="/chats" component={ChatTabs}>
         <ChatTabs />
       </Route>
     </Router>

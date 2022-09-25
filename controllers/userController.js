@@ -1,8 +1,9 @@
 const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 
 const UserModel = require("../models/user");
 const utils = require("../utilities/utils");
-const generateToken = require("../middlewares/authorization");
+const config = require("../configuration/config");
 
 exports.signup = (req, res, next) => {
   const { firstName, lastName, username, password, securityQ, securityA } = req.body;
@@ -39,7 +40,8 @@ exports.login = (req, res, next) => {
       bcrypt.compare(password, user.password).then((result) => {
         if (result) {
           try {
-            const token = generateToken(user._id);
+            const obj = { username: username, userId: user._id };
+            const token = jwt.sign(obj, config.secret_key, { expiresIn: 3600 });
             utils.sendSuccessResponse(res, 200, "Login successful!", {
               access_token: token,
               expiresIn: 3600,
@@ -49,11 +51,11 @@ exports.login = (req, res, next) => {
             console.log(err);
           }
         } else {
-          utils.sendErrorResponse(res, 401, "Unauthorized!", "Incorrect password!");
+          utils.sendErrorResponse(res, 401, "Unauthorized", "Incorrect password!");
         }
       });
     } else {
-      utils.sendErrorResponse(res, 401, "Unauthorized!", "Incorrect username!");
+      utils.sendErrorResponse(res, 401, "Unauthorized", "Incorrect username!");
     }
   });
 };
