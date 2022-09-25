@@ -1,12 +1,18 @@
 import React from "react";
+import { useState } from "react";
+import { createRoot } from "react-dom/client";
+
 import Button from "react-bootstrap/Button";
 import Form from "react-bootstrap/Form";
 import Container from "react-bootstrap/Container";
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
 import InputGroup from "react-bootstrap/InputGroup";
-import { useState } from "react";
 import { BsEye, BsEyeSlash } from "react-icons/bs";
+
+import Toastr from "../Toastr/Toastr";
+import axios from "axios";
+
 import "../../App.css";
 
 function Signup() {
@@ -84,29 +90,49 @@ function Signup() {
   const [securityQ, setSecurityQ] = useState();
   const [securityA, setSecurityA] = useState();
 
-  const handlePasswordChange = (evnt) => {
-    setPasswordInput(evnt.target.value);
-  }
+  const handlePasswordChange = (event) => {
+    setPasswordInput(event.target.value);
+    setPassword(event.target.value);
+  };
 
   const togglePasswordType = () => {
     if (passwordType === "password") {
-      setPasswordType("text")
-    } else
-    setPasswordType("password");
-  }
+      setPasswordType("text");
+    } else setPasswordType("password");
+  };
 
-  const signupHandler = () => {
-    alert('signup clicked');
-  }
+  const signupHandler = (event) => {
+    event.preventDefault();
+    const container = document.getElementById("toastr");
+    const root = createRoot(container);
+
+    if (!username || !password) {
+      root.render(<Toastr variant="Danger" title="Error" message="Invalid username or password" />);
+    } else {
+      const config = {
+        "Content-type": "application/json",
+      };
+
+      axios
+        .post("http://localhost:5000/api/user/signup", { username, password, securityQ, securityA }, config)
+        .then((resp) => {
+          root.render(<Toastr variant="Success" title="Success" message={resp.data.message} />);
+        })
+        .catch((error) => {
+          root.render(<Toastr variant="Danger" title={error.response.data.error} message={error.response.data.message} />);
+        });
+    }
+  };
 
   return (
     <Container>
+      <div id="toastr"></div>
       <Row>
         <Col className="container d-inline-flex align-items-center justify-content-center">
           <Form>
-            <Form.Group className="mb-3" controlId="userId">
+            <Form.Group className="mb-3" controlId="username">
               <Form.Label>Username</Form.Label>
-              <Form.Control type="text" placeholder="Enter Username" />
+              <Form.Control type="text" placeholder="Enter Username" onChange={(e) => setUsername(e.target.value)} />
               <Form.Text id="usernameHelp" muted>
                 Username should be unique
               </Form.Text>
@@ -117,23 +143,30 @@ function Signup() {
               <InputGroup>
                 <Form.Control type={passwordType} onChange={handlePasswordChange} value={passwordInput} placeholder="Password" />
                 <Button variant="outline-secondary" id="search" onClick={togglePasswordType}>
-                  {passwordType === "password" ? <BsEyeSlash/> : <BsEye/>}
+                  {passwordType === "password" ? <BsEyeSlash /> : <BsEye />}
                 </Button>
               </InputGroup>
             </Form.Group>
 
-            <Form.Group className="mb-3" controlId="securityQ">
+            <Form.Group className="mb-1" controlId="securityQ">
               <Form.Label style={{ paddingRight: "2px" }}>Select a security question</Form.Label>
               <Form.Text id="passwordResetHelp" muted>
                 (This will be used for password recovery)
               </Form.Text>
-              <Form.Select className="mb-2" aria-label="Security Question">
+              <Form.Select className="mb-2" aria-label="Security Question" onChange={(e) => setSecurityQ(e.target.value)}>
                 <option>Open this select menu</option>
-                {securityQs.map(ques => {
-                  return <option value={ques.value}>{ques.label}</option>
+                {securityQs.map((ques, key) => {
+                  return (
+                    <option key={key} value={ques.value}>
+                      {ques.label}
+                    </option>
+                  );
                 })}
               </Form.Select>
-              <Form.Control type="text" placeholder="Answer" />
+            </Form.Group>
+
+            <Form.Group className="mb-3" controlId="securityA">
+              <Form.Control type="text" placeholder="Answer" onChange={(e) => setSecurityA(e.target.value)} />
             </Form.Group>
 
             <Button variant="primary" type="Submit" onClick={signupHandler}>

@@ -12,9 +12,9 @@ function Login() {
       <Row>
         <Col className="container d-inline-flex align-items-center justify-content-center">
           <Form>
-            <Form.Group className="mb-3" controlId="userId">
-              <Form.Label>UserId</Form.Label>
-              <Form.Control type="email" placeholder="Enter UserId" />
+            <Form.Group className="mb-3" controlId="username">
+              <Form.Label>username</Form.Label>
+              <Form.Control type="text" placeholder="Enter username" />
             </Form.Group>
 
             <Form.Group className="mb-3" controlId="password">

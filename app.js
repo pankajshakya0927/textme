@@ -3,11 +3,13 @@ const app = express();
 const db = require("./db");
 const bodyParser = require("body-parser");
 const path = require("path");
+const cors = require('cors');
 
 const userRoute = require("./routes/user");
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
+app.use(cors());
 
 app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
