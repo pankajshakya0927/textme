@@ -1,7 +1,6 @@
-import React from "react";
+import React, { useState } from "react";
 import Button from "react-bootstrap/Button";
 import Container from "react-bootstrap/Container";
-import Form from "react-bootstrap/Form";
 import Nav from "react-bootstrap/Nav";
 import Navbar from "react-bootstrap/Navbar";
 import NavDropdown from "react-bootstrap/NavDropdown";
@@ -9,8 +8,19 @@ import Offcanvas from "react-bootstrap/Offcanvas";
 import ButtonGroup from "react-bootstrap/ButtonGroup";
 import { HiUserAdd } from "react-icons/hi";
 import { MdNotifications } from "react-icons/md";
+import AddFriends from "../AddFriends/AddFriends";
 
 function NavbarOffCanvas() {
+  const [show, setShow] = useState(false);
+
+  const handleOnShow = () => [
+    setShow(true)
+  ]
+
+  const handleOnHide = () => [
+    setShow(false)
+  ]
+
   return (
     <>
       {["md"].map((expand) => (
@@ -19,13 +29,14 @@ function NavbarOffCanvas() {
             <Navbar.Brand href="#">TextMe</Navbar.Brand>
             <div>
               <ButtonGroup aria-label="Controls" style={{ marginRight: "10px" }}>
-                <Button variant="primary">
+                <Button variant="primary" onClick={handleOnShow}>
                   <HiUserAdd size={28} />
                 </Button>
                 <Button variant="primary">
                   <MdNotifications size={28} />
                 </Button>
               </ButtonGroup>
+              <AddFriends show={show} onHide={handleOnHide}></AddFriends>
               <Navbar.Toggle aria-controls={`offcanvasNavbar-expand-${expand}`} />
             </div>
             <Navbar.Offcanvas id={`offcanvasNavbar-expand-${expand}`} aria-labelledby={`offcanvasNavbarLabel-expand-${expand}`} placement="end">
@@ -43,10 +54,6 @@ function NavbarOffCanvas() {
                     <NavDropdown.Item href="#action5">Something else here</NavDropdown.Item>
                   </NavDropdown>
                 </Nav>
-                <Form className="d-flex">
-                  <Form.Control type="search" placeholder="Search" className="me-2" aria-label="Search" />
-                  <Button variant="light">Search</Button>
-                </Form>
               </Offcanvas.Body>
             </Navbar.Offcanvas>
           </Container>
