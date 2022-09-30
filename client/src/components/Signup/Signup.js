@@ -1,6 +1,5 @@
 import React from "react";
 import { useState } from "react";
-import { createRoot } from "react-dom/client";
 
 import Button from "react-bootstrap/Button";
 import Form from "react-bootstrap/Form";
@@ -90,6 +89,17 @@ function Signup() {
   const [securityQ, setSecurityQ] = useState();
   const [securityA, setSecurityA] = useState();
 
+  let options = {
+    show: false,
+    variant: "",
+    title: "",
+    message: "",
+  };
+  const [toastr, setToaster] = useState(options);
+  const handleOnHide = () => {
+    setToaster(options);
+  };
+
   const handlePasswordChange = (event) => {
     setPasswordInput(event.target.value);
     setPassword(event.target.value);
@@ -103,12 +113,14 @@ function Signup() {
 
   const signupHandler = (event) => {
     event.preventDefault();
-    
-    const container = document.getElementById("toastr");
-    const root = createRoot(container);
-
     if (!username || !password) {
-      root.render(<Toastr variant="Danger" title="Error" message="username or password can't be empty" />);
+      const errorOption = {
+        show: true,
+        variant: "Danger",
+        title: "Error",
+        message: "username or password can't be empty",
+      };
+      setToaster(errorOption);
     } else {
       const config = {
         "Content-type": "application/json",
@@ -117,17 +129,29 @@ function Signup() {
       axios
         .post("http://localhost:5000/api/user/signup", { username, password, securityQ, securityA }, config)
         .then((resp) => {
-          root.render(<Toastr variant="Success" title="Success" message={resp.data.message} />);
+          const successOption = {
+            show: true,
+            variant: "Success",
+            title: "Success",
+            message: resp.data.message,
+          };
+          setToaster(successOption);
         })
         .catch((error) => {
-          root.render(<Toastr variant="Danger" title={error.response.data.error} message={error.response.data.message} />);
+          const errorOption = {
+            show: true,
+            variant: "Danger",
+            title: error.response.data.error,
+            message: error.response.data.message,
+          };
+          setToaster(errorOption);
         });
     }
   };
 
   return (
     <Container>
-      <div id="toastr"></div>
+      <Toastr show={toastr.show} onHide={handleOnHide} variant={toastr.variant} title={toastr.title} message={toastr.message} />
       <Row>
         <Col className="container d-inline-flex align-items-center justify-content-center">
           <Form>
