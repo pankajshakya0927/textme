@@ -1,4 +1,6 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+
 import ListGroup from "react-bootstrap/ListGroup";
 import Form from "react-bootstrap/Form";
 import InputGroup from "react-bootstrap/InputGroup";
@@ -8,11 +10,44 @@ import Row from "react-bootstrap/Row";
 import Tab from "react-bootstrap/Tab";
 import ChatBox from "../ChatBox/ChatBox";
 import { FcSearch } from "react-icons/fc";
+
+import Toastr from "../Toastr/Toastr";
+import utils from "../../shared/utils";
+import config from "../../configurations/config";
 import "./ChatTabs.css";
 
 function ChatTabs() {
+  const [friends, setFriends] = useState([]);
+
+  const options = utils.getDefaultToastrOptions();
+  const [toastr, setToaster] = useState(options);
+  const handleOnHide = () => {
+    setToaster(options);
+  };
+
+  useEffect(() => {
+    const access_token = utils.getItemFromLocalStorage("access_token");
+    const reqConfig = {
+      headers: {
+        "Content-type": "application/json",
+        Authorization: `Bearer ${access_token}`,
+      },
+    };
+
+    axios
+      .get(`${config.apiBaseUrl}/user/getFriends`, reqConfig)
+      .then((resp) => {
+        if (resp && resp.data && resp.data.data) setFriends(resp.data.data);
+      })
+      .catch((error) => {
+        const errorOptions = utils.getErrorToastrOptions(error.response.data.error, error.response.data.message);
+        setToaster(errorOptions);
+      });
+  }, []);
+
   return (
     <Tab.Container id="list-group-tabs" defaultActiveKey="#link1">
+      <Toastr show={toastr.show} onHide={handleOnHide} variant={toastr.variant} title={toastr.title} message={toastr.message} />
       <Row className="tabs g-1">
         <Col sm={4}>
           <ListGroup>
@@ -25,26 +60,12 @@ function ChatTabs() {
               </InputGroup>
             </ListGroup.Item>
             <div className="chatName">
-              <ListGroup.Item action href="#link1">
-                <img className="rounded-circle" alt="50x50" src="https://picsum.photos/id/100/50/50" data-holder-rendered="true" />
-                <span>Link 1</span>
-              </ListGroup.Item>
-              <ListGroup.Item action href="#link2">
-                <img className="rounded-circle" alt="50x50" src="https://picsum.photos/id/200/50/50" data-holder-rendered="true" />
-                Link 2
-              </ListGroup.Item>
-              <ListGroup.Item action href="#link3">
-                <img className="rounded-circle" alt="50x50" src="https://picsum.photos/id/300/50/50" data-holder-rendered="true" />
-                Link 3
-              </ListGroup.Item>
-              <ListGroup.Item action href="#link4">
-                <img className="rounded-circle" alt="50x50" src="https://picsum.photos/id/400/50/50" data-holder-rendered="true" />
-                Link 4
-              </ListGroup.Item>
-              <ListGroup.Item action href="#link5">
-                <img className="rounded-circle" alt="50x50" src="https://picsum.photos/id/500/50/50" data-holder-rendered="true" />
-                Link 5
-              </ListGroup.Item>
+              {friends.map((friend, key) => (
+                <ListGroup.Item key={key}>
+                  <img className="rounded-circle" alt="50x50" src="https://picsum.photos/id/100/50/50" data-holder-rendered="true" />
+                  <span>{friend}</span>
+                </ListGroup.Item>
+              ))}
             </div>
           </ListGroup>
         </Col>

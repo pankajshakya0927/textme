@@ -20,7 +20,7 @@ exports.signup = (req, res, next) => {
           securityQ: securityQ,
           securityA: securityA,
         });
-    
+
         user.save((err, result) => {
           if (err) {
             utils.sendErrorResponse(res, 400, err.name, err.message);
@@ -41,10 +41,9 @@ exports.login = (req, res, next) => {
         if (result) {
           try {
             const obj = { username: username, userId: user._id };
-            const token = jwt.sign(obj, config.secret_key, { expiresIn: 3600 });
+            const token = jwt.sign(obj, config.secret_key);
             utils.sendSuccessResponse(res, 200, "Login successful!", {
               access_token: token,
-              expiresIn: 3600,
               current_user: { _id: user._id, firstName: user.firstName, lastName: user.lastName, username: user.username },
             });
           } catch (err) {
@@ -62,4 +61,54 @@ exports.login = (req, res, next) => {
 
 exports.recover = (req, res, next) => {
   // TO DO: password recovery using security Question
+};
+
+exports.fetchAll = (req, res, next) => {
+  try {
+    UserModel.find(
+      {},
+      (err, users) => {
+        let usernames = [];
+        users.forEach((user) => {
+          usernames.push(user.username);
+        });
+
+        utils.sendSuccessResponse(res, 200, "Usernames fetched successfully", usernames);
+      },
+      (err) => {
+        utils.sendErrorResponse(res, 400, "Error", "Failed to fetch usernames");
+      }
+    );
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+exports.addFriend = (req, res, next) => {
+  const { username } = req.body;
+  const currentUser = req.currentUser;
+
+  UserModel.findOneAndUpdate({ username: currentUser.username }, { $addToSet: { friends: username } }).then((success, error) => {
+    if (success) {
+      utils.sendSuccessResponse(res, 200, "Friend added successfully", null);
+    } else {
+      utils.sendErrorResponse(res, 400, "Error", "Failed to add friend");
+    }
+  });
+};
+
+exports.getFriends = (req, res, next) => {
+  const { username } = req.currentUser;
+  try {
+    UserModel.findOne({ username: username }).then((user) => {
+        const friends = user.friends;
+        utils.sendSuccessResponse(res, 200, "Friends fetched successfully", friends);
+      },
+      (err) => {
+        utils.sendErrorResponse(res, 400, "Error", "Failed to fetch friends");
+      }
+    );
+  } catch (error) {
+    console.log(error);
+  }
 };

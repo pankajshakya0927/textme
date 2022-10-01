@@ -7,7 +7,8 @@ const schema = mongoose.Schema({
   username: { type: String, require: true, unique: true },
   password: { type: String, require: true },
   securityQ: { type: Number},
-  securityA: { type: String}
+  securityA: { type: String},
+  friends: { type: Array }
 },
 { timestamps: true}
 );

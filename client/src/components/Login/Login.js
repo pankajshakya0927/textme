@@ -10,35 +10,27 @@ import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
 
 import Toastr from "../Toastr/Toastr";
+import utils from "../../shared/utils";
 import "../../App.css";
 
 function Login() {
   const [username, setUsername] = useState();
   const [password, setPassword] = useState();
 
-  let options = {
-    show: false,
-    variant: "",
-    title: "",
-    message: "",
-  };
+  let options = utils.getDefaultToastrOptions();
   const [toastr, setToaster] = useState(options);
+
   const handleOnHide = () => {
     setToaster(options);
-  }
+  };
 
   const history = useHistory();
 
   const loginHandler = (event) => {
     event.preventDefault();
     if (!username || !password) {
-      const errorOption = {
-        show: true,
-        variant: "Danger",
-        title: "Error",
-        message: "username or password can't be empty",
-      };
-      setToaster(errorOption);
+      const errorOptions = utils.getErrorToastrOptions("Error", "Username or Password can't be empty");
+      setToaster(errorOptions);
     } else {
       const config = {
         "Content-type": "application/json",
@@ -47,16 +39,15 @@ function Login() {
       axios
         .post("http://localhost:5000/api/user/login", { username, password }, config)
         .then((resp) => {
-          history.push("/chats");
+          if (resp.data.data) {
+            utils.setItemToLocalStorage("access_token", resp.data.data.access_token);
+            utils.setItemToLocalStorage("current_username", resp.data.data.current_user.username);
+            history.push("/chats");
+          }
         })
         .catch((error) => {
-          const errorOption = {
-            show: true,
-            variant: "Danger",
-            title: error.response.data.error,
-            message: error.response.data.message,
-          };
-          setToaster(errorOption);
+          const errorOptions = utils.getErrorToastrOptions(error.response.data.error, error.response.data.message);
+          setToaster(errorOptions);
         });
     }
   };

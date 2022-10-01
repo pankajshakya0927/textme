@@ -1,5 +1,6 @@
 import React from "react";
 import { useState } from "react";
+import axios from "axios";
 
 import Button from "react-bootstrap/Button";
 import Form from "react-bootstrap/Form";
@@ -10,7 +11,7 @@ import InputGroup from "react-bootstrap/InputGroup";
 import { BsEye, BsEyeSlash } from "react-icons/bs";
 
 import Toastr from "../Toastr/Toastr";
-import axios from "axios";
+import utils from "../../shared/utils";
 
 import "../../App.css";
 
@@ -89,12 +90,7 @@ function Signup() {
   const [securityQ, setSecurityQ] = useState();
   const [securityA, setSecurityA] = useState();
 
-  let options = {
-    show: false,
-    variant: "",
-    title: "",
-    message: "",
-  };
+  let options = utils.getDefaultToastrOptions();
   const [toastr, setToaster] = useState(options);
   const handleOnHide = () => {
     setToaster(options);
@@ -114,13 +110,8 @@ function Signup() {
   const signupHandler = (event) => {
     event.preventDefault();
     if (!username || !password) {
-      const errorOption = {
-        show: true,
-        variant: "Danger",
-        title: "Error",
-        message: "username or password can't be empty",
-      };
-      setToaster(errorOption);
+      const errorOptions = utils.getErrorToastrOptions("Error", "Username or Password can't be empty");
+      setToaster(errorOptions);
     } else {
       const config = {
         "Content-type": "application/json",
@@ -129,22 +120,12 @@ function Signup() {
       axios
         .post("http://localhost:5000/api/user/signup", { username, password, securityQ, securityA }, config)
         .then((resp) => {
-          const successOption = {
-            show: true,
-            variant: "Success",
-            title: "Success",
-            message: resp.data.message,
-          };
-          setToaster(successOption);
+          const successOptions = utils.getSuccessToastrOptions(resp.data.message);
+          setToaster(successOptions);
         })
         .catch((error) => {
-          const errorOption = {
-            show: true,
-            variant: "Danger",
-            title: error.response.data.error,
-            message: error.response.data.message,
-          };
-          setToaster(errorOption);
+          const errorOptions = utils.getErrorToastrOptions(error.response.data.error, error.response.data.message);
+          setToaster(errorOptions);
         });
     }
   };
