@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import axios from "axios";
 
 import Button from "react-bootstrap/Button";
@@ -11,9 +11,11 @@ import { FcSearch } from "react-icons/fc";
 import Toastr from "../Toastr/Toastr";
 import config from "../../configurations/config";
 import utils from "../../shared/utils";
+import { FriendsContext } from "../../context/FriendsContext";
 import "./AddFriends.css";
 
 function AddFriends(props) {
+  const { setUpdatedFriends } = useContext(FriendsContext);
   const [search, setSearch] = useState();
 
   const options = utils.getDefaultToastrOptions();
@@ -48,14 +50,16 @@ function AddFriends(props) {
       .post(`${config.apiBaseUrl}/user/addFriend`, addUser, reqConfig)
       .then((resp) => {
         if (resp && resp.data) {
-          utils.setItemToLocalStorage("friends", JSON.stringify(resp.data.data));
+          // utils.setItemToLocalStorage("friends", JSON.stringify(resp.data.data));
+          setUpdatedFriends(resp.data.data);
           const successOptions = utils.getSuccessToastrOptions(resp.data.message);
           setToaster(successOptions);
         }
       })
       .catch((error) => {
-        const errorOptions = utils.getErrorToastrOptions(error.response.data.error, error.response.data.message);
-        setToaster(errorOptions);
+        console.log(error);
+        // const errorOptions = utils.getErrorToastrOptions(error.response.data.error, error.response.data.message);
+        // setToaster(errorOptions);
       });
   };
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import axios from "axios";
 import { useHistory } from "react-router-dom";
 
@@ -15,11 +15,13 @@ import { FcSearch } from "react-icons/fc";
 import Toastr from "../Toastr/Toastr";
 import utils from "../../shared/utils";
 import config from "../../configurations/config";
+import { FriendsContext } from "../../context/FriendsContext";
 import "./ChatTabs.css";
 
 function ChatTabs() {
   const [friends, setFriends] = useState([]);
   const [selectedFriend, setSelectedFriend] = useState();
+  const { updatedFriends } = useContext(FriendsContext);
 
   const history = useHistory();
 
@@ -29,6 +31,11 @@ function ChatTabs() {
     setToaster(options);
   };
 
+  console.log(updatedFriends, " from chat tabs", friends);
+  if (updatedFriends) {
+    // setFriends(updatedFriends);
+  }
+  
   useEffect(() => {
     const loggedIn = utils.isLoggedIn();
 
@@ -61,6 +68,7 @@ function ChatTabs() {
   const handleSelectFriend = (friend, e) => {
     e.preventDefault();
     setSelectedFriend(friend.username);
+    if (updatedFriends) setFriends(updatedFriends);
   };
 
   return (

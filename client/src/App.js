@@ -5,10 +5,12 @@ import ChatTabs from "./components/ChatTabs/ChatTabs";
 import NavbarOffCanvas from "./components/Navbar/Navbar";
 import Signup from "./components/Signup/Signup";
 import Login from "./components/Login/Login";
+import { FriendsContextProvider } from "./context/FriendsContext";
 import "./App.css";
 
 function App() {
   return (
+    <FriendsContextProvider>
     <Router>
       <NavbarOffCanvas />
       <Route exact path="/signup" component={Signup}>
@@ -21,6 +23,7 @@ function App() {
         <ChatTabs />
       </Route>
     </Router>
+    </FriendsContextProvider>
   );
 }
 
