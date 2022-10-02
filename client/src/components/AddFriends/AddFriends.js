@@ -8,8 +8,8 @@ import Form from "react-bootstrap/Form";
 import InputGroup from "react-bootstrap/InputGroup";
 import { FcSearch } from "react-icons/fc";
 
-import config from "../../configurations/config";
 import Toastr from "../Toastr/Toastr";
+import config from "../../configurations/config";
 import utils from "../../shared/utils";
 import "./AddFriends.css";
 
@@ -48,6 +48,7 @@ function AddFriends(props) {
       .post(`${config.apiBaseUrl}/user/addFriend`, addUser, reqConfig)
       .then((resp) => {
         if (resp && resp.data) {
+          utils.setItemToLocalStorage("friends", JSON.stringify(resp.data.data));
           const successOptions = utils.getSuccessToastrOptions(resp.data.message);
           setToaster(successOptions);
         }

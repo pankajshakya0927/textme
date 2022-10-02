@@ -57,7 +57,7 @@ function Login() {
       <Toastr show={toastr.show} onHide={handleOnHide} variant={toastr.variant} title={toastr.title} message={toastr.message} />
       <Row>
         <Col className="container d-inline-flex align-items-center justify-content-center">
-          <Form>
+          <Form style={{ width: "20em" }}>
             <Form.Group className="mb-3" controlId="username">
               <Form.Label>Username</Form.Label>
               <Form.Control type="text" placeholder="Enter username" onChange={(e) => setUsername(e.target.value)} />

@@ -65,7 +65,7 @@ exports.recover = (req, res, next) => {
 
 exports.update = (req, res, next) => {
   // TO DO: Profile update
-}
+};
 
 exports.fetchAll = (req, res, next) => {
   try {
@@ -93,11 +93,14 @@ exports.addFriend = (req, res, next) => {
   const currentUser = req.currentUser;
 
   UserModel.findOne({ username: username }).then((user) => {
-    const { password, friends, securityQ, securityA, updatedAt, ...friend} = user.toObject();
+    const { password, friends, securityQ, securityA, updatedAt, ...friend } = user.toObject();
     if (user) {
       UserModel.findOneAndUpdate({ username: currentUser.username }, { $addToSet: { friends: friend } }).then((success, error) => {
         if (success) {
-          utils.sendSuccessResponse(res, 200, "Friend added successfully", null);
+          UserModel.findOne({ username: currentUser.username }).then((user) => {
+            const friends = user.friends;
+            utils.sendSuccessResponse(res, 200, "Friend added successfully", friends);
+          });
         } else {
           utils.sendErrorResponse(res, 400, "Error", "Failed to add friend");
         }
@@ -108,16 +111,15 @@ exports.addFriend = (req, res, next) => {
 
 exports.getFriends = (req, res, next) => {
   const { username } = req.currentUser;
-  try {
-    UserModel.findOne({ username: username }).then((user) => {
+
+  UserModel.findOne({ username: username }).then((user) => {
+    if (user) {
+      try {
         const friends = user.friends;
         utils.sendSuccessResponse(res, 200, "Friends fetched successfully", friends);
-      },
-      (err) => {
+      } catch (error) {
         utils.sendErrorResponse(res, 400, "Error", "Failed to fetch friends");
       }
-    );
-  } catch (error) {
-    console.log(error);
-  }
+    }
+  });
 };

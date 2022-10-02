@@ -10,7 +10,8 @@ const schema = mongoose.Schema({
   securityA: { type: String},
   friends: { type: Array }
 },
-{ timestamps: true}
+{ versionKey: false },
+{ timestamps: true },
 );
 
 schema.plugin(uniqueValidator);

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import { useHistory } from "react-router-dom";
 
 import ListGroup from "react-bootstrap/ListGroup";
 import Form from "react-bootstrap/Form";
@@ -20,6 +21,8 @@ function ChatTabs() {
   const [friends, setFriends] = useState([]);
   const [selectedFriend, setSelectedFriend] = useState();
 
+  const history = useHistory();
+
   const options = utils.getDefaultToastrOptions();
   const [toastr, setToaster] = useState(options);
   const handleOnHide = () => {
@@ -27,32 +30,38 @@ function ChatTabs() {
   };
 
   useEffect(() => {
-    const access_token = utils.getItemFromLocalStorage("access_token");
-    const reqConfig = {
-      headers: {
-        "Content-type": "application/json",
-        Authorization: `Bearer ${access_token}`,
-      },
-    };
+    const loggedIn = utils.isLoggedIn();
 
-    axios
-      .get(`${config.apiBaseUrl}/user/getFriends`, reqConfig)
-      .then((resp) => {
-        if (resp && resp.data && resp.data.data) {
-          setFriends(resp.data.data);
-          setSelectedFriend(friends[0]);
-        }
-      })
-      .catch((error) => {
-        const errorOptions = utils.getErrorToastrOptions(error.response.data.error, error.response.data.message);
-        setToaster(errorOptions);
-      });
+    if (loggedIn) {
+      const access_token = utils.getItemFromLocalStorage("access_token");
+      const reqConfig = {
+        headers: {
+          "Content-type": "application/json",
+          Authorization: `Bearer ${access_token}`,
+        },
+      };
+
+      axios
+        .get(`${config.apiBaseUrl}/user/getFriends`, reqConfig)
+        .then((resp) => {
+          if (resp && resp.data && resp.data.data) {
+            setFriends(resp.data.data);
+            setSelectedFriend(friends[0]);
+          }
+        })
+        .catch((error) => {
+          const errorOptions = utils.getErrorToastrOptions(error.response.data.error, error.response.data.message);
+          setToaster(errorOptions);
+          history.push("/login");
+          utils.logout();
+        });
+    }
   }, []);
 
   const handleSelectFriend = (friend, e) => {
     e.preventDefault();
     setSelectedFriend(friend.username);
-  }
+  };
 
   return (
     <>
@@ -89,7 +98,13 @@ function ChatTabs() {
         </Row>
 
         <div className={friends && friends.length ? "hide" : "container"}>
-          <h5>Hi there! <span role="img" aria-label="wave" className="wave">👋</span> Welcome to TextMe. Add you first friend to get the fun started.</h5>
+          <h5>
+            Hi there!{" "}
+            <span role="img" aria-label="wave" className="wave">
+              👋
+            </span>{" "}
+            Welcome to TextMe. Add your first friend to get the fun started.
+          </h5>
         </div>
       </Tab.Container>
     </>

@@ -160,7 +160,7 @@ function Signup() {
                 (This will be used for password recovery)
               </Form.Text>
               <Form.Select className="mb-2" aria-label="Security Question" onChange={(e) => setSecurityQ(e.target.value)}>
-                <option>Open this select menu</option>
+                <option selected="true" disabled="true">Open this select menu</option>
                 {securityQs.map((ques, key) => {
                   return (
                     <option key={key} value={ques.value}>
