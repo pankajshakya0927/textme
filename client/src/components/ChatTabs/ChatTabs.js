@@ -31,9 +31,9 @@ function ChatTabs() {
     setToaster(options);
   };
 
-  console.log(updatedFriends, " from chat tabs", friends);
-  if (updatedFriends) {
-    // setFriends(updatedFriends);
+  // update friends
+  if (updatedFriends && (updatedFriends !== friends)) {
+    setFriends(updatedFriends);
   }
   
   useEffect(() => {
