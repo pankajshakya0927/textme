@@ -18,6 +18,7 @@ import "./ChatTabs.css";
 
 function ChatTabs() {
   const [friends, setFriends] = useState([]);
+  const [selectedFriend, setSelectedFriend] = useState();
 
   const options = utils.getDefaultToastrOptions();
   const [toastr, setToaster] = useState(options);
@@ -37,7 +38,10 @@ function ChatTabs() {
     axios
       .get(`${config.apiBaseUrl}/user/getFriends`, reqConfig)
       .then((resp) => {
-        if (resp && resp.data && resp.data.data) setFriends(resp.data.data);
+        if (resp && resp.data && resp.data.data) {
+          setFriends(resp.data.data);
+          setSelectedFriend(friends[0]);
+        }
       })
       .catch((error) => {
         const errorOptions = utils.getErrorToastrOptions(error.response.data.error, error.response.data.message);
@@ -45,51 +49,50 @@ function ChatTabs() {
       });
   }, []);
 
+  const handleSelectFriend = (friend, e) => {
+    e.preventDefault();
+    setSelectedFriend(friend.username);
+  }
+
   return (
-    <Tab.Container id="list-group-tabs" defaultActiveKey="#link1">
+    <>
       <Toastr show={toastr.show} onHide={handleOnHide} variant={toastr.variant} title={toastr.title} message={toastr.message} />
-      <Row className="tabs g-1">
-        <Col sm={4}>
-          <ListGroup>
-            <ListGroup.Item>
-              <InputGroup className="search">
-                <Form.Control placeholder="Search..." aria-label="Search" />
-                <Button variant="outline-secondary" id="search">
-                  <FcSearch />
-                </Button>
-              </InputGroup>
-            </ListGroup.Item>
-            <div className="chatName">
-              {friends.map((friend, key) => (
-                <ListGroup.Item key={key}>
-                  <img className="rounded-circle" alt="50x50" src="https://picsum.photos/id/100/50/50" data-holder-rendered="true" />
-                  <span>{friend}</span>
-                </ListGroup.Item>
-              ))}
-            </div>
-          </ListGroup>
-        </Col>
-        <Col sm={8}>
-          <Tab.Content>
-            <Tab.Pane eventKey="#link1">
-              <ChatBox message="link1" />
-            </Tab.Pane>
-            <Tab.Pane eventKey="#link2">
-              <ChatBox message="link2" />
-            </Tab.Pane>
-            <Tab.Pane eventKey="#link3">
-              <ChatBox message="link3" />
-            </Tab.Pane>
-            <Tab.Pane eventKey="#link4">
-              <ChatBox message="link4" />
-            </Tab.Pane>
-            <Tab.Pane eventKey="#link5">
-              <ChatBox message="link5" />
-            </Tab.Pane>
-          </Tab.Content>
-        </Col>
-      </Row>
-    </Tab.Container>
+      <Tab.Container id="list-group-tabs">
+        <Row className={friends && friends.length ? "tabs g-1" : "hide"}>
+          <Col sm={4}>
+            <ListGroup>
+              <ListGroup.Item>
+                <InputGroup className="search">
+                  <Form.Control placeholder="Search..." aria-label="Search" />
+                  <Button variant="outline-secondary" id="search">
+                    <FcSearch />
+                  </Button>
+                </InputGroup>
+              </ListGroup.Item>
+              <div className="chatName">
+                {friends.map((friend, key) => (
+                  <ListGroup.Item key={key} action href={friend.username} onClick={(e) => handleSelectFriend(friend, e)}>
+                    <img className="rounded-circle" alt="50x50" src="https://picsum.photos/id/100/50/50" data-holder-rendered="true" />
+                    <span>{friend.username}</span>
+                  </ListGroup.Item>
+                ))}
+              </div>
+            </ListGroup>
+          </Col>
+          <Col sm={8}>
+            <Tab.Content>
+              <Tab.Pane eventKey={selectedFriend}>
+                <ChatBox message={selectedFriend} />
+              </Tab.Pane>
+            </Tab.Content>
+          </Col>
+        </Row>
+
+        <div className={friends && friends.length ? "hide" : "container"}>
+          <h5>Hi there! <span role="img" aria-label="wave" className="wave">👋</span> Welcome to TextMe. Add you first friend to get the fun started.</h5>
+        </div>
+      </Tab.Container>
+    </>
   );
 }
 

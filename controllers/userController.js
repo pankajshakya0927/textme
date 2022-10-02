@@ -63,6 +63,10 @@ exports.recover = (req, res, next) => {
   // TO DO: password recovery using security Question
 };
 
+exports.update = (req, res, next) => {
+  // TO DO: Profile update
+}
+
 exports.fetchAll = (req, res, next) => {
   try {
     UserModel.find(
@@ -88,11 +92,16 @@ exports.addFriend = (req, res, next) => {
   const { username } = req.body;
   const currentUser = req.currentUser;
 
-  UserModel.findOneAndUpdate({ username: currentUser.username }, { $addToSet: { friends: username } }).then((success, error) => {
-    if (success) {
-      utils.sendSuccessResponse(res, 200, "Friend added successfully", null);
-    } else {
-      utils.sendErrorResponse(res, 400, "Error", "Failed to add friend");
+  UserModel.findOne({ username: username }).then((user) => {
+    const { password, friends, securityQ, securityA, updatedAt, ...friend} = user.toObject();
+    if (user) {
+      UserModel.findOneAndUpdate({ username: currentUser.username }, { $addToSet: { friends: friend } }).then((success, error) => {
+        if (success) {
+          utils.sendSuccessResponse(res, 200, "Friend added successfully", null);
+        } else {
+          utils.sendErrorResponse(res, 400, "Error", "Failed to add friend");
+        }
+      });
     }
   });
 };
