@@ -12,16 +12,18 @@ import Tab from "react-bootstrap/Tab";
 import ChatBox from "../ChatBox/ChatBox";
 import { FcSearch } from "react-icons/fc";
 
-import Toastr from "../Toastr/Toastr";
-import utils from "../../shared/utils";
-import config from "../../configurations/config";
+import { AuthContext } from "../../context/AuthContext";
 import { FriendsContext } from "../../context/FriendsContext";
+import Toastr from "../Toastr/Toastr";
+import utils from "../../shared/Utils";
+import config from "../../configurations/config";
 import "./ChatTabs.css";
 
 function ChatTabs() {
   const [friends, setFriends] = useState([]);
   const [selectedFriend, setSelectedFriend] = useState();
   const { updatedFriends } = useContext(FriendsContext);
+  const { isLoggedIn } = useContext(AuthContext);
 
   const history = useHistory();
 
@@ -31,15 +33,12 @@ function ChatTabs() {
     setToaster(options);
   };
 
-  // update friends
-  if (updatedFriends && (updatedFriends !== friends)) {
+  if (updatedFriends && updatedFriends !== friends) {
     setFriends(updatedFriends);
   }
-  
-  useEffect(() => {
-    const loggedIn = utils.isLoggedIn();
 
-    if (loggedIn) {
+  useEffect(() => {
+    if (isLoggedIn) {
       const access_token = utils.getItemFromLocalStorage("access_token");
       const reqConfig = {
         headers: {
@@ -106,13 +105,24 @@ function ChatTabs() {
         </Row>
 
         <div className={friends && friends.length ? "hide" : "container"}>
-          <h5>
-            Hi there!{" "}
-            <span role="img" aria-label="wave" className="wave">
-              👋
-            </span>{" "}
-            Welcome to TextMe. Add your first friend to get the fun started.
-          </h5>
+          {isLoggedIn ? (
+            <h5>
+              Hi there!{" "}
+              <span role="img" aria-label="wave" className="wave">
+                👋
+              </span>{" "}
+              Welcome to TextMe!!! <br />
+              Add your first friend to get the fun started.
+            </h5>
+          ) : (
+            <h5>
+              Hi there!{" "}
+              <span role="img" aria-label="wave" className="wave">
+                👋
+              </span>{" "}
+              Welcome to TextMe!!!
+            </h5>
+          )}
         </div>
       </Tab.Container>
     </>

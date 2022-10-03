@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useContext } from "react";
 import Button from "react-bootstrap/Button";
 import { useState } from "react";
 import { useHistory } from "react-router-dom";
@@ -9,13 +9,15 @@ import Container from "react-bootstrap/Container";
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
 
+import { AuthContext } from "../../context/AuthContext";
 import Toastr from "../Toastr/Toastr";
-import utils from "../../shared/utils";
+import utils from "../../shared/Utils";
 import "../../App.css";
 
 function Login() {
   const [username, setUsername] = useState();
   const [password, setPassword] = useState();
+  const { setIsLoggedIn } = useContext(AuthContext);
 
   let options = utils.getDefaultToastrOptions();
   const [toastr, setToaster] = useState(options);
@@ -41,7 +43,9 @@ function Login() {
         .then((resp) => {
           if (resp.data.data) {
             utils.setItemToLocalStorage("access_token", resp.data.data.access_token);
-            utils.setItemToLocalStorage("current_username", resp.data.data.current_user.username);
+            utils.setItemToLocalStorage("current_user", JSON.stringify(resp.data.data.current_user));
+            utils.setItemToLocalStorage("isLoggedIn", true);
+            setIsLoggedIn(true);
             history.push("/chats");
           }
         })

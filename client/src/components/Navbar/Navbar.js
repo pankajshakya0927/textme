@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import axios from "axios";
 import { useHistory } from "react-router-dom";
 
@@ -13,36 +13,44 @@ import { HiUserAdd } from "react-icons/hi";
 import { MdNotifications } from "react-icons/md";
 
 import AddFriends from "../AddFriends/AddFriends";
+import { AuthContext } from "../../context/AuthContext";
 import Toastr from "../Toastr/Toastr";
-import utils from "../../shared/utils";
+import utils from "../../shared/Utils";
 import config from "../../configurations/config";
 
 function NavbarOffCanvas() {
   const [show, setShow] = useState(false);
   const [users, setUsers] = useState([]);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const history = useHistory();
-
-  const handleOnShow = () => [setShow(true)];
-  const handleOnHide = () => [setShow(false)];
+  const { isLoggedIn, setIsLoggedIn } = useContext(AuthContext);
 
   let options = utils.getDefaultToastrOptions();
   const [toastr, setToaster] = useState(options);
+  const current_user = JSON.parse(utils.getItemFromLocalStorage('current_user'));
+  
+  const handleOnShow = () => [setShow(true)];
+  const handleOnHide = () => [setShow(false)];
 
   const handleOnHideToastr = () => {
     setToaster(options);
   };
 
-  const handleLogout = () => {
-    utils.logout();
+  const handleLogin = () => {
     history.push("/login");
   }
 
-  useEffect(() => {
-    const loggedIn = utils.isLoggedIn();
-    setIsLoggedIn(loggedIn);
+  const handleSignup = () => {
+    history.push("/signup");
+  }
 
-    if (loggedIn) {
+  const handleLogout = () => {
+    setIsLoggedIn(false);
+    history.push("/login");
+    utils.logout();
+  }
+
+  useEffect(() => {
+    if (isLoggedIn) {
       const access_token = utils.getItemFromLocalStorage("access_token");
 
       const reqConfig = {
@@ -62,7 +70,7 @@ function NavbarOffCanvas() {
           setToaster(errorOptions);
         });
     }
-  }, []);
+  }, [isLoggedIn]);
 
   return (
     <>
@@ -95,13 +103,18 @@ function NavbarOffCanvas() {
                   <Nav.Link href="#action1">Home</Nav.Link>
                   <Nav.Link href="#action2">Contact Us</Nav.Link>
                   {isLoggedIn ? (
-                    <NavDropdown title="Profile" align="end" id={`offcanvasNavbarDropdown-expand-${expand}`}>
+                    <NavDropdown title={current_user.username} align="end" id={`offcanvasNavbarDropdown-expand-${expand}`}>
                       <NavDropdown.Item href="#action3">Update Profile</NavDropdown.Item>
                       <NavDropdown.Item href="#action4">Account Settings</NavDropdown.Item>
                       <NavDropdown.Divider />
                       <NavDropdown.Item onClick={handleLogout}>Logout</NavDropdown.Item>
                     </NavDropdown>
-                  ) : null}
+                  ) : (
+                    <>
+                      <Button variant="primary" onClick={handleLogin}>Log in</Button>
+                      <Button variant="light" onClick={handleSignup}>Sign up</Button>
+                    </>
+                  )}
                 </Nav>
               </Offcanvas.Body>
             </Navbar.Offcanvas>

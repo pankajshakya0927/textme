@@ -7,10 +7,6 @@ export default {
     return localStorage.getItem(key);
   },
 
-  isLoggedIn: () => {
-    return localStorage.getItem("access_token") ?  true : false;
-  },
-
   getDefaultToastrOptions: () => {
     const options = {
       show: false,

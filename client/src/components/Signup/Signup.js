@@ -11,7 +11,7 @@ import InputGroup from "react-bootstrap/InputGroup";
 import { BsEye, BsEyeSlash } from "react-icons/bs";
 
 import Toastr from "../Toastr/Toastr";
-import utils from "../../shared/utils";
+import utils from "../../shared/Utils";
 
 import "../../App.css";
 
