@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect, useContext, useRef } from "react";
 import axios from "axios";
 import { useHistory } from "react-router-dom";
 
@@ -24,6 +24,7 @@ function ChatTabs() {
   const [selectedFriend, setSelectedFriend] = useState();
   const { updatedFriends } = useContext(FriendsContext);
   const { isLoggedIn } = useContext(AuthContext);
+  const shouldFetch = useRef(true);
 
   const history = useHistory();
 
@@ -38,7 +39,8 @@ function ChatTabs() {
   }
 
   useEffect(() => {
-    if (isLoggedIn) {
+    if (isLoggedIn && shouldFetch.current) {
+      shouldFetch.current = false;
       const access_token = utils.getItemFromLocalStorage("access_token");
       const reqConfig = {
         headers: {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect, useContext, useRef } from "react";
 import axios from "axios";
 import { useHistory } from "react-router-dom";
 
@@ -23,6 +23,7 @@ function NavbarOffCanvas() {
   const [users, setUsers] = useState([]);
   const history = useHistory();
   const { isLoggedIn, setIsLoggedIn } = useContext(AuthContext);
+  const shouldFetch = useRef(true); // useEffect runs twice thereby calling the api twice, this will avoid that
 
   let options = utils.getDefaultToastrOptions();
   const [toastr, setToaster] = useState(options);
@@ -49,8 +50,10 @@ function NavbarOffCanvas() {
     utils.logout();
   }
 
+
   useEffect(() => {
-    if (isLoggedIn) {
+    if (isLoggedIn && shouldFetch.current) {
+      shouldFetch.current = false;
       const access_token = utils.getItemFromLocalStorage("access_token");
 
       const reqConfig = {
