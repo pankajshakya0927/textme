@@ -26,7 +26,9 @@ exports.createChat = (req, res, next) => {
 };
 
 exports.fetchChats = (req, res, next) => {
-    const currentUser = req.currentUser;
+  const currentUser = req.currentUser;
+
+  const descSort = {'_id': -1}; // _id ObjectId in mongo stores timestamp
   try {
     ChatModel.find(
       { username: currentUser.username },
@@ -36,7 +38,7 @@ exports.fetchChats = (req, res, next) => {
       (err) => {
         utils.sendErrorResponse(res, 400, "Error", "Failed to fetch chats");
       }
-    );
+    ).sort(descSort);
   } catch (error) {
     console.log(error);
   }

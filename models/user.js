@@ -10,7 +10,6 @@ const schema = mongoose.Schema({
   securityA: { type: String},
   friends: { type: Array }
 },
-{ versionKey: false },
 { timestamps: true },
 );
 

@@ -7,7 +7,6 @@ const schema = mongoose.Schema(
     members: { type: Array },
     username: { type: String, require: true },
   },
-  { versionKey: false },
   { timestamps: true }
 );
 
