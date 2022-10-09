@@ -166,6 +166,12 @@ function ChatTabs() {
             </ListGroup>
           </Col>
           <Col sm={8}>
+            {!selectedChat ? (
+              <h5 class="align-center">
+                Choose a chat to start the conversation
+                <span class="emoji monkey" role="img" aria-label="monkey"></span>
+              </h5>
+            ) : null}
             <Tab.Content>
               <Tab.Pane eventKey={selectedChat}>
                 <ChatBox message={selectedChat} />

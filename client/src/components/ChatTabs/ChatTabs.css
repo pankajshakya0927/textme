@@ -4,7 +4,8 @@
     padding: 10px;
 }
 
-.chats-tab, .friends-tab {
+.chats-tab,
+.friends-tab {
     overflow-y: auto;
     height: calc(100vh - 159px) !important;
 }
@@ -71,4 +72,32 @@
 
 .mg-l10 {
     margin-left: 10px;
+}
+
+.align-center {
+    text-align: center;
+    line-height: 50vh;
+}
+
+.emoji::after {
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+}
+
+.monkey::after {
+    content: '🙈';
+    --emoji-1: '🙉';
+    --emoji-2: '🙊';
+    animation-name: threeFrames;
+    animation-duration: 2s;
+}
+
+@keyframes threeFrames {
+    33.333% {
+        content: var(--emoji-1);
+    }
+
+    66.666% {
+        content: var(--emoji-2);
+    }
 }
