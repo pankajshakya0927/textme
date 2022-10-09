@@ -84,7 +84,7 @@ function ChatTabs() {
 
   const fetchFriends = () => {
     axios
-      .get(`${config.apiBaseUrl}/user/getFriends`, reqConfig)
+      .get(`${config.apiBaseUrl}/user/fetchFriends`, reqConfig)
       .then((resp) => {
         if (resp && resp.data && resp.data.data) {
           setFriends(resp.data.data);

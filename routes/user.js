@@ -7,8 +7,8 @@ const checkAuth = require("../middlewares/checkAuth");
 router.post("/signup", userController.signup);
 router.post("/login", userController.login);
 router.post("/recover", userController.recover);
-router.get("/fetchAll", checkAuth, userController.fetchAll);
+router.get("/fetchAllUsers", checkAuth, userController.fetchAllUsers);
 router.post("/addFriend", checkAuth, userController.addFriend);
-router.get("/getFriends", checkAuth, userController.getFriends);
+router.get("/fetchFriends", checkAuth, userController.fetchFriends);
 
 module.exports = router;

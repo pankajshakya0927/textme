@@ -63,7 +63,7 @@ function NavbarOffCanvas() {
       };
 
       axios
-        .get(`${config.apiBaseUrl}/user/fetchAll`, reqConfig)
+        .get(`${config.apiBaseUrl}/user/fetchAllUsers`, reqConfig)
         .then((resp) => {
           if (resp && resp.data && resp.data.data) setUsers(resp.data.data);
         })

@@ -67,17 +67,17 @@ exports.update = (req, res, next) => {
   // TO DO: Profile update
 };
 
-exports.fetchAll = (req, res, next) => {
+exports.fetchAllUsers = (req, res, next) => {
+  const currentUser = req.currentUser;
   try {
-    UserModel.find(
-      {},
+    UserModel.find({ username: { $ne: currentUser.username } },
       (err, users) => {
         let usernames = [];
         users.forEach((user) => {
           usernames.push(user.username);
         });
 
-        utils.sendSuccessResponse(res, 200, "Usernames fetched successfully", usernames);
+        utils.sendSuccessResponse(res, 200, "Users fetched successfully", usernames);
       },
       (err) => {
         utils.sendErrorResponse(res, 400, "Error", "Failed to fetch usernames");
@@ -114,7 +114,7 @@ exports.addFriend = (req, res, next) => {
   });
 };
 
-exports.getFriends = (req, res, next) => {
+exports.fetchFriends = (req, res, next) => {
   const { username } = req.currentUser;
 
   UserModel.findOne({ username: username }).then((user) => {
