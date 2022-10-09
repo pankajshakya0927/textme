@@ -6,6 +6,7 @@ const path = require("path");
 const cors = require('cors');
 
 const userRoute = require("./routes/user");
+const chatRoute = require("./routes/chat");
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
@@ -18,8 +19,8 @@ app.use((req, res, next) => {
   next();
 });
 
-// user route
 app.use("/api/user", userRoute);
+app.use("/api/chat", chatRoute);
 
 // serve the static files
 if (process.env.NODE_ENV === "production") {

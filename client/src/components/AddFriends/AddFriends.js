@@ -68,7 +68,7 @@ function AddFriends(props) {
           <Modal.Title>Add Friends</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <ListGroup>
+          <ListGroup className={search ? "add-friend" : ""}>
             <ListGroup.Item>
               <InputGroup className="search">
                 <Form.Control type="text" placeholder="Search username..." aria-label="Search username" onChange={(e) => setSearch(e.target.value)} />

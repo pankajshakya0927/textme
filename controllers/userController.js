@@ -44,7 +44,7 @@ exports.login = (req, res, next) => {
             const token = jwt.sign(obj, config.secret_key);
             utils.sendSuccessResponse(res, 200, "Login successful!", {
               access_token: token,
-              current_user: { _id: user._id, firstName: user.firstName, lastName: user.lastName, username: user.username },
+              current_user: { firstName: user.firstName, lastName: user.lastName, username: user.username },
             });
           } catch (err) {
             console.log(err);
@@ -115,7 +115,10 @@ exports.getFriends = (req, res, next) => {
   UserModel.findOne({ username: username }).then((user) => {
     if (user) {
       try {
-        const friends = user.friends;
+        let friends = [];
+        user.friends.forEach((friend) => {
+          friends.push(friend.username);
+        });
         utils.sendSuccessResponse(res, 200, "Friends fetched successfully", friends);
       } catch (error) {
         utils.sendErrorResponse(res, 400, "Error", "Failed to fetch friends");

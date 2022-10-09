@@ -2,3 +2,8 @@
     display: flex !important;
     justify-content: space-between;
 }
+
+.add-friend {
+    overflow-y: auto;
+    height: calc(100vh - 293px) !important;
+}

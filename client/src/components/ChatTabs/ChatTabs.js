@@ -3,14 +3,10 @@ import axios from "axios";
 import { useHistory } from "react-router-dom";
 
 import ListGroup from "react-bootstrap/ListGroup";
-import Form from "react-bootstrap/Form";
-import InputGroup from "react-bootstrap/InputGroup";
-import Button from "react-bootstrap/Button";
 import Col from "react-bootstrap/Col";
 import Row from "react-bootstrap/Row";
 import Tab from "react-bootstrap/Tab";
 import ChatBox from "../ChatBox/ChatBox";
-import { FcSearch } from "react-icons/fc";
 
 import { AuthContext } from "../../context/AuthContext";
 import { FriendsContext } from "../../context/FriendsContext";
@@ -21,9 +17,21 @@ import "./ChatTabs.css";
 
 function ChatTabs() {
   const [friends, setFriends] = useState([]);
-  const [selectedFriend, setSelectedFriend] = useState();
+  const [chats, setChats] = useState([]);
+  const [tab, setTab] = useState(1);
+  const [selectedChat, setSelectedChat] = useState();
   const { updatedFriends } = useContext(FriendsContext);
   const { isLoggedIn } = useContext(AuthContext);
+
+  const access_token = utils.getItemFromLocalStorage("access_token");
+  const current_user = JSON.parse(utils.getItemFromLocalStorage("current_user"));
+
+  const reqConfig = {
+    headers: {
+      "Content-type": "application/json",
+      Authorization: `Bearer ${access_token}`,
+    },
+  };
   const shouldFetch = useRef(true);
 
   const history = useHistory();
@@ -41,35 +49,81 @@ function ChatTabs() {
   useEffect(() => {
     if (isLoggedIn && shouldFetch.current) {
       shouldFetch.current = false;
-      const access_token = utils.getItemFromLocalStorage("access_token");
-      const reqConfig = {
-        headers: {
-          "Content-type": "application/json",
-          Authorization: `Bearer ${access_token}`,
-        },
-      };
-
-      axios
-        .get(`${config.apiBaseUrl}/user/getFriends`, reqConfig)
-        .then((resp) => {
-          if (resp && resp.data && resp.data.data) {
-            setFriends(resp.data.data);
-            setSelectedFriend(friends[0]);
-          }
-        })
-        .catch((error) => {
-          const errorOptions = utils.getErrorToastrOptions(error.response.data.error, error.response.data.message);
-          setToaster(errorOptions);
-          history.push("/login");
-          utils.logout();
-        });
+      fetchChats();
+      fetchFriends();
     }
   }, []);
 
   const handleSelectFriend = (friend, e) => {
     e.preventDefault();
-    setSelectedFriend(friend.username);
     if (updatedFriends) setFriends(updatedFriends);
+
+    // create chat
+    if (isLoggedIn) {
+      const chatReq = {
+        chatName: friend,
+        members: [friend, current_user.username],
+        current_user: current_user.username,
+      };
+
+      axios
+        .post(`${config.apiBaseUrl}/chat/createChat`, chatReq, reqConfig)
+        .then((resp) => {
+          if (resp && resp.data && resp.data.data) {
+            const chatRes = resp.data.data;
+            fetchChats();
+            setSelectedChat(chatRes.chatName);
+            setTab(1); // Clicking on friend should open the chat with them
+          }
+        })
+        .catch((error) => {
+          const errorOptions = utils.getErrorToastrOptions(error.response.data.error, error.response.data.message);
+          setToaster(errorOptions);
+        });
+    }
+  };
+
+  const fetchFriends = () => {
+    axios
+      .get(`${config.apiBaseUrl}/user/getFriends`, reqConfig)
+      .then((resp) => {
+        if (resp && resp.data && resp.data.data) {
+          setFriends(resp.data.data);
+        }
+      })
+      .catch((error) => {
+        const errorOptions = utils.getErrorToastrOptions(error.response.data.error, error.response.data.message);
+        setToaster(errorOptions);
+        history.push("/login");
+        utils.logout();
+      });
+  };
+
+  const fetchChats = () => {
+    if (isLoggedIn) {
+      axios
+        .get(`${config.apiBaseUrl}/chat/fetchChats`, reqConfig)
+        .then((resp) => {
+          if (resp && resp.data && resp.data.data) {
+            setChats(resp.data.data);
+          }
+        })
+        .catch((error) => {
+          const errorOptions = utils.getErrorToastrOptions(error.response.data.error, error.response.data.message);
+          setToaster(errorOptions);
+        });
+    }
+  };
+
+  const handleSelectChat = (chat, e) => {
+    e.preventDefault();
+    setSelectedChat(chat.chatName);
+    // TO DO: Fetch messages for the chat
+  };
+
+  const handleSetTab = (tab, e) => {
+    e.preventDefault();
+    setTab(tab);
   };
 
   return (
@@ -80,27 +134,41 @@ function ChatTabs() {
           <Col sm={4}>
             <ListGroup>
               <ListGroup.Item>
-                <InputGroup className="search">
-                  <Form.Control placeholder="Search..." aria-label="Search" />
-                  <Button variant="outline-secondary" id="search">
-                    <FcSearch />
-                  </Button>
-                </InputGroup>
-              </ListGroup.Item>
-              <div className="chatName">
-                {friends.map((friend, key) => (
-                  <ListGroup.Item key={key} action href={friend.username} onClick={(e) => handleSelectFriend(friend, e)}>
-                    <img className="rounded-circle" alt="50x50" src="https://picsum.photos/id/100/50/50" data-holder-rendered="true" />
-                    <span>{friend.username}</span>
+                <ListGroup horizontal>
+                  <ListGroup.Item action href="1" onClick={(e) => handleSetTab(1, e)}>
+                    Chats
                   </ListGroup.Item>
-                ))}
-              </div>
+                  <ListGroup.Item action href="2" onClick={(e) => handleSetTab(2, e)}>
+                    Friends
+                  </ListGroup.Item>
+                </ListGroup>
+              </ListGroup.Item>
+              {tab === 1 && (
+                <div className="chats-tab">
+                  {chats.map((chat, key) => (
+                    <ListGroup.Item key={key} action href={chat.chatName} onClick={(e) => handleSelectChat(chat, e)}>
+                      <img className="rounded-circle" alt="50x50" src="https://picsum.photos/id/100/50/51" data-holder-rendered="true" />
+                      <span className="mg-l10">{chat.chatName}</span>
+                    </ListGroup.Item>
+                  ))}
+                </div>
+              )}
+              {tab === 2 && (
+                <div className="friends-tab">
+                  {friends.map((friend, key) => (
+                    <ListGroup.Item key={key} action onClick={(e) => handleSelectFriend(friend, e)}>
+                      <img className="rounded-circle" alt="50x50" src="https://picsum.photos/id/100/50/50" data-holder-rendered="true" />
+                      <span className="mg-l10">{friend}</span>
+                    </ListGroup.Item>
+                  ))}
+                </div>
+              )}
             </ListGroup>
           </Col>
           <Col sm={8}>
             <Tab.Content>
-              <Tab.Pane eventKey={selectedFriend}>
-                <ChatBox message={selectedFriend} />
+              <Tab.Pane eventKey={selectedChat}>
+                <ChatBox message={selectedChat} />
               </Tab.Pane>
             </Tab.Content>
           </Col>
