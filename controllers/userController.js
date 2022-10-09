@@ -98,7 +98,12 @@ exports.addFriend = (req, res, next) => {
       UserModel.findOneAndUpdate({ username: currentUser.username }, { $addToSet: { friends: friend } }).then((success, error) => {
         if (success) {
           UserModel.findOne({ username: currentUser.username }).then((user) => {
-            const friends = user.friends;
+            let friends = [];
+            if (user && user.friends) {
+              user.friends.forEach((friend) => {
+                friends.push(friend.username);
+              });
+            }
             utils.sendSuccessResponse(res, 200, "Friend added successfully", friends);
           });
         } else {
@@ -116,9 +121,11 @@ exports.getFriends = (req, res, next) => {
     if (user) {
       try {
         let friends = [];
-        user.friends.forEach((friend) => {
-          friends.push(friend.username);
-        });
+        if (user && user.friends) {
+          user.friends.forEach((friend) => {
+            friends.push(friend.username);
+          });
+        }
         utils.sendSuccessResponse(res, 200, "Friends fetched successfully", friends);
       } catch (error) {
         utils.sendErrorResponse(res, 400, "Error", "Failed to fetch friends");

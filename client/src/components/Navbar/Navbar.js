@@ -50,7 +50,6 @@ function NavbarOffCanvas() {
     utils.logout();
   }
 
-
   useEffect(() => {
     if (isLoggedIn && shouldFetch.current) {
       shouldFetch.current = false;
@@ -74,6 +73,10 @@ function NavbarOffCanvas() {
         });
     }
   }, [isLoggedIn]);
+
+  const navigateTo = (path) => {
+    history.push(path);
+  }
 
   return (
     <>
@@ -103,12 +106,12 @@ function NavbarOffCanvas() {
               </Offcanvas.Header>
               <Offcanvas.Body>
                 <Nav className="justify-content-end flex-grow-1 pe-3">
-                  <Nav.Link href="#action1">Home</Nav.Link>
-                  <Nav.Link href="#action2">Contact Us</Nav.Link>
+                  <Nav.Link onClick={() => navigateTo('/')}>Home</Nav.Link>
+                  <Nav.Link>Contact Us</Nav.Link>
                   {isLoggedIn ? (
                     <NavDropdown title={current_user.username} align="end" id={`offcanvasNavbarDropdown-expand-${expand}`}>
-                      <NavDropdown.Item href="#action3">Update Profile</NavDropdown.Item>
-                      <NavDropdown.Item href="#action4">Account Settings</NavDropdown.Item>
+                      <NavDropdown.Item>Update Profile</NavDropdown.Item>
+                      <NavDropdown.Item>Account Settings</NavDropdown.Item>
                       <NavDropdown.Divider />
                       <NavDropdown.Item onClick={handleLogout}>Logout</NavDropdown.Item>
                     </NavDropdown>

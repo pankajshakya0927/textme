@@ -56,7 +56,6 @@ function ChatTabs() {
 
   const handleSelectFriend = (friend, e) => {
     e.preventDefault();
-    if (updatedFriends) setFriends(updatedFriends);
 
     // create chat
     if (isLoggedIn) {
@@ -118,6 +117,7 @@ function ChatTabs() {
   const handleSelectChat = (chat, e) => {
     e.preventDefault();
     setSelectedChat(chat.chatName);
+
     // TO DO: Fetch messages for the chat
   };
 
@@ -135,10 +135,10 @@ function ChatTabs() {
             <ListGroup>
               <ListGroup.Item>
                 <ListGroup horizontal>
-                  <ListGroup.Item action href="1" onClick={(e) => handleSetTab(1, e)}>
+                  <ListGroup.Item action onClick={(e) => handleSetTab(1, e)}>
                     Chats
                   </ListGroup.Item>
-                  <ListGroup.Item action href="2" onClick={(e) => handleSetTab(2, e)}>
+                  <ListGroup.Item action onClick={(e) => handleSetTab(2, e)}>
                     Friends
                   </ListGroup.Item>
                 </ListGroup>
@@ -147,7 +147,7 @@ function ChatTabs() {
                 <div className="chats-tab">
                   {chats.map((chat, key) => (
                     <ListGroup.Item key={key} action href={chat.chatName} onClick={(e) => handleSelectChat(chat, e)}>
-                      <img className="rounded-circle" alt="50x50" src="https://picsum.photos/id/100/50/51" data-holder-rendered="true" />
+                      <img className="rounded-circle" alt="profile" src={require("../../assets/images/profile.png")} width="50px" data-holder-rendered="true" />
                       <span className="mg-l10">{chat.chatName}</span>
                     </ListGroup.Item>
                   ))}
@@ -156,8 +156,8 @@ function ChatTabs() {
               {tab === 2 && (
                 <div className="friends-tab">
                   {friends.map((friend, key) => (
-                    <ListGroup.Item key={key} action onClick={(e) => handleSelectFriend(friend, e)}>
-                      <img className="rounded-circle" alt="50x50" src="https://picsum.photos/id/100/50/50" data-holder-rendered="true" />
+                    <ListGroup.Item key={key} action href={friend} onClick={(e) => handleSelectFriend(friend, e)}>
+                      <img className="rounded-circle" alt="profile" src={require("../../assets/images/profile.png")} width="50px" data-holder-rendered="true" />
                       <span className="mg-l10">{friend}</span>
                     </ListGroup.Item>
                   ))}

@@ -8,6 +8,7 @@ import Login from "./components/Login/Login";
 
 import { FriendsContextProvider } from "./context/FriendsContext";
 import "./App.css";
+import Homepage from "./components/Home/Homepage";
 
 function App() {
   return (
@@ -15,6 +16,9 @@ function App() {
       <Router>
         <NavbarOffCanvas />
         <Switch>
+          <Route exact path="/" component={Homepage}>
+            <Homepage />
+          </Route>
           <Route exact path="/signup" component={Signup}>
             <Signup />
           </Route>
