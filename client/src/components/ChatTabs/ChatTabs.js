@@ -6,20 +6,23 @@ import ListGroup from "react-bootstrap/ListGroup";
 import Col from "react-bootstrap/Col";
 import Row from "react-bootstrap/Row";
 import Tab from "react-bootstrap/Tab";
-import ChatBox from "../ChatBox/ChatBox";
+import Dropdown from "react-bootstrap/Dropdown";
 
-import { AuthContext } from "../../context/AuthContext";
-import { FriendsContext } from "../../context/FriendsContext";
+import ChatBox from "../ChatBox/ChatBox";
 import Toastr from "../Toastr/Toastr";
 import utils from "../../shared/Utils";
 import config from "../../configurations/config";
+import { AuthContext } from "../../context/AuthContext";
+import { FriendsContext } from "../../context/FriendsContext";
 import "./ChatTabs.css";
 
 function ChatTabs() {
   const [friends, setFriends] = useState([]);
   const [chats, setChats] = useState([]);
+  const [messages, setMessages] = useState([]);
   const [tab, setTab] = useState(1);
   const [selectedChat, setSelectedChat] = useState();
+  const [chatId, setChatId] = useState();
   const { updatedFriends } = useContext(FriendsContext);
   const { isLoggedIn } = useContext(AuthContext);
 
@@ -32,8 +35,8 @@ function ChatTabs() {
       Authorization: `Bearer ${access_token}`,
     },
   };
-  const shouldFetch = useRef(true);
 
+  const shouldFetch = useRef(true);
   const history = useHistory();
 
   const options = utils.getDefaultToastrOptions();
@@ -60,24 +63,29 @@ function ChatTabs() {
     // create chat
     if (isLoggedIn) {
       const chatReq = {
-        chatName: friend,
         members: [friend, current_user.username],
-        current_user: current_user.username,
       };
 
       axios
         .post(`${config.apiBaseUrl}/chat/createChat`, chatReq, reqConfig)
-        .then((resp) => {
-          if (resp && resp.data && resp.data.data) {
-            const chatRes = resp.data.data;
-            fetchChats();
-            setSelectedChat(chatRes.chatName);
-            setTab(1); // Clicking on friend should open the chat with them
+        .then(
+          (resp) => {
+            if (resp && resp.data && resp.data.data) {
+              const chatRes = resp.data.data;
+              fetchChats();
+
+              const chatWith = chatRes.members.filter((member) => member !== current_user.username);
+              setSelectedChat(chatWith);
+              setTab(1); // Clicking on friend should open the chat with them
+            }
+          },
+          (error) => {
+            const errorOptions = utils.getErrorToastrOptions(error.response.data.error, error.response.data.message);
+            setToaster(errorOptions);
           }
-        })
+        )
         .catch((error) => {
-          const errorOptions = utils.getErrorToastrOptions(error.response.data.error, error.response.data.message);
-          setToaster(errorOptions);
+          console.error(error);
         });
     }
   };
@@ -104,7 +112,15 @@ function ChatTabs() {
         .get(`${config.apiBaseUrl}/chat/fetchChats`, reqConfig)
         .then((resp) => {
           if (resp && resp.data && resp.data.data) {
-            setChats(resp.data.data);
+            const chats = [];
+            resp.data.data.forEach((chat) => {
+              const chatWith = chat.members.find((member) => member !== current_user.username);
+              chats.push({
+                chatId: chat._id,
+                chatWith: chatWith,
+              });
+            });
+            setChats(chats);
           }
         })
         .catch((error) => {
@@ -116,9 +132,33 @@ function ChatTabs() {
 
   const handleSelectChat = (chat, e) => {
     e.preventDefault();
-    setSelectedChat(chat.chatName);
+    const chatId = chat.chatId;
+    setChatId(chatId);
+    setSelectedChat(chat.chatWith);
 
-    // TO DO: Fetch messages for the chat
+    const messageReq = {
+      headers: {
+        "Content-type": "application/json",
+        Authorization: `Bearer ${access_token}`,
+      },
+      params: {
+        chatId: chatId,
+      },
+    };
+
+    if (isLoggedIn && chatId) {
+      axios
+        .get(`${config.apiBaseUrl}/message/fetchAll`, messageReq)
+        .then((resp) => {
+          if (resp && resp.data && resp.data.data) {
+            setMessages(resp.data.data);
+          }
+        })
+        .catch((error) => {
+          const errorOptions = utils.getErrorToastrOptions(error.response.data.error, error.response.data.message);
+          setToaster(errorOptions);
+        });
+    }
   };
 
   const handleSetTab = (tab, e) => {
@@ -146,9 +186,15 @@ function ChatTabs() {
               {tab === 1 && (
                 <div className="chats-tab">
                   {chats.map((chat, key) => (
-                    <ListGroup.Item key={key} action href={chat.chatName} onClick={(e) => handleSelectChat(chat, e)}>
+                    <ListGroup.Item key={key} action href={chat.chatWith} onClick={(e) => handleSelectChat(chat, e)} className="d-flex justify-content-between">
                       <img className="rounded-circle" alt="profile" src={require("../../assets/images/profile.png")} width="50px" data-holder-rendered="true" />
-                      <span className="mg-l10">{chat.chatName}</span>
+                      <span className="mg-l10">{chat.chatWith}</span>
+                      <Dropdown>
+                        <Dropdown.Toggle variant="light" id="chatOptions"></Dropdown.Toggle>
+                        <Dropdown.Menu>
+                          <Dropdown.Item eventKey="1">Delete</Dropdown.Item>
+                        </Dropdown.Menu>
+                      </Dropdown>
                     </ListGroup.Item>
                   ))}
                 </div>
@@ -167,14 +213,14 @@ function ChatTabs() {
           </Col>
           <Col sm={8}>
             {!selectedChat ? (
-              <h5 class="align-center">
+              <h5 className="align-center">
                 Choose a chat to start the conversation
-                <span class="emoji monkey" role="img" aria-label="monkey"></span>
+                <span className="emoji monkey" role="img" aria-label="monkey"></span>
               </h5>
             ) : null}
             <Tab.Content>
               <Tab.Pane eventKey={selectedChat}>
-                <ChatBox message={selectedChat} />
+                <ChatBox chatId={chatId} chatWith={selectedChat} messages={messages} />
               </Tab.Pane>
             </Tab.Content>
           </Col>
