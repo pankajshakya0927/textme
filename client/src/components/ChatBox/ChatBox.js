@@ -38,7 +38,10 @@ export default function ChatBox(props) {
     },
   };
 
-  const handleSendMessage = () => {
+  const handleSendMessage = (e) => {
+    e.preventDefault();
+    setMessage("");
+
     if (isLoggedIn && message) {
       const messageReq = {
         chatId: props.chatId,
@@ -47,12 +50,17 @@ export default function ChatBox(props) {
 
       axios
         .post(`${config.apiBaseUrl}/message/send`, messageReq, reqConfig)
-        .then((resp) => {
-          console.log("message sent successfully");
-        })
-        .catch((error) => {
-          const errorOptions = utils.getErrorToastrOptions(error.response.data.error, error.response.data.message);
-          setToaster(errorOptions);
+        .then(
+          (resp) => {
+            console.log("message sent successfully");
+          },
+          (error) => {
+            const errorOptions = utils.getErrorToastrOptions(error.response.data.error, error.response.data.message);
+            setToaster(errorOptions);
+          }
+        )
+        .catch((err) => {
+          console.error(err);
         });
     }
   };
@@ -64,7 +72,7 @@ export default function ChatBox(props) {
       <Card className="box">
         <Card.Header className="d-flex align-items-center justify-content-between">
           <div>
-            <h4>{props.chatWith}</h4>
+            <h4 className="word-wrap">{props.chatWith}</h4>
             <span>Typing...</span>
           </div>
           <div>
@@ -78,9 +86,9 @@ export default function ChatBox(props) {
             </ButtonGroup>
           </div>
         </Card.Header>
-        <Card.Body>
+        <Card.Body className="overflow-auto">
           {props.messages.map((msg, key) => (
-            <ListGroup key={key} className={msg.sender === current_user.username ? "ms-5 mb-2" : "me-5 mb-2"} >
+            <ListGroup key={key} className={msg.sender === current_user.username ? "align-items-end mb-2" : "align-items-start mb-2"}>
               <ListGroup.Item variant={msg.sender === current_user.username ? "primary" : ""} key={key}>
                 {msg.message}
               </ListGroup.Item>
@@ -88,18 +96,20 @@ export default function ChatBox(props) {
           ))}
         </Card.Body>
         <Card.Footer>
-          <InputGroup>
-            <Button variant="outline-secondary">
-              <BiSmile size={20} />
-            </Button>
-            <Button variant="outline-secondary">
-              <GrAttachment size={17} />
-            </Button>
-            <Form.Control placeholder="Enter message..." aria-label="Enter message" onChange={(e) => setMessage(e.target.value)} />
-            <Button variant="primary" id="send" onClick={handleSendMessage}>
-              Send
-            </Button>
-          </InputGroup>
+          <Form>
+            <InputGroup>
+              <Button variant="outline-secondary">
+                <BiSmile size={20} />
+              </Button>
+              <Button variant="outline-secondary">
+                <GrAttachment size={17} />
+              </Button>
+              <Form.Control placeholder="Enter message..." aria-label="Enter message" value={message} onChange={(e) => setMessage(e.target.value)} />
+              <Button type="Submit" variant="primary" id="send" onClick={(e) => handleSendMessage(e)}>
+                Send
+              </Button>
+            </InputGroup>
+          </Form>
         </Card.Footer>
       </Card>
     </>

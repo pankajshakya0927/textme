@@ -1,3 +1,7 @@
 .box {
     height: calc(100vh - 85px) !important;
 }
+
+.word-wrap {
+    overflow-wrap: anywhere;
+}

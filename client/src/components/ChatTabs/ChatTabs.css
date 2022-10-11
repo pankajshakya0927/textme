@@ -101,3 +101,7 @@
         content: var(--emoji-2);
     }
 }
+
+.word-wrap {
+    overflow-wrap: anywhere;
+}

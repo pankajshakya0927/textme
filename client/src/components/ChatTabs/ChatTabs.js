@@ -6,7 +6,6 @@ import ListGroup from "react-bootstrap/ListGroup";
 import Col from "react-bootstrap/Col";
 import Row from "react-bootstrap/Row";
 import Tab from "react-bootstrap/Tab";
-import Dropdown from "react-bootstrap/Dropdown";
 
 import ChatBox from "../ChatBox/ChatBox";
 import Toastr from "../Toastr/Toastr";
@@ -60,7 +59,6 @@ function ChatTabs() {
   const handleSelectFriend = (friend, e) => {
     e.preventDefault();
 
-    // create chat
     if (isLoggedIn) {
       const chatReq = {
         members: [friend, current_user.username],
@@ -74,9 +72,15 @@ function ChatTabs() {
               const chatRes = resp.data.data;
               fetchChats();
 
-              const chatWith = chatRes.members.filter((member) => member !== current_user.username);
+              const chatWith = chatRes.members.find((member) => member !== current_user.username);
               setSelectedChat(chatWith);
               setTab(1); // Clicking on friend should open the chat with them
+
+              const chat = {
+                chatId: chatRes._id,
+                chatWith
+              }
+              fetchMessages(chat);
             }
           },
           (error) => {
@@ -130,8 +134,7 @@ function ChatTabs() {
     }
   };
 
-  const handleSelectChat = (chat, e) => {
-    e.preventDefault();
+  const fetchMessages = (chat) => {
     const chatId = chat.chatId;
     setChatId(chatId);
     setSelectedChat(chat.chatWith);
@@ -161,6 +164,11 @@ function ChatTabs() {
     }
   };
 
+  const handleSelectChat = (chat, e) => {
+    e.preventDefault();
+    fetchMessages(chat);
+  };
+
   const handleSetTab = (tab, e) => {
     e.preventDefault();
     setTab(tab);
@@ -186,15 +194,9 @@ function ChatTabs() {
               {tab === 1 && (
                 <div className="chats-tab">
                   {chats.map((chat, key) => (
-                    <ListGroup.Item key={key} action href={chat.chatWith} onClick={(e) => handleSelectChat(chat, e)} className="d-flex justify-content-between">
+                    <ListGroup.Item key={key} action href={chat.chatWith} onClick={(e) => handleSelectChat(chat, e)}>
                       <img className="rounded-circle" alt="profile" src={require("../../assets/images/profile.png")} width="50px" data-holder-rendered="true" />
-                      <span className="mg-l10">{chat.chatWith}</span>
-                      <Dropdown>
-                        <Dropdown.Toggle variant="light" id="chatOptions"></Dropdown.Toggle>
-                        <Dropdown.Menu>
-                          <Dropdown.Item eventKey="1">Delete</Dropdown.Item>
-                        </Dropdown.Menu>
-                      </Dropdown>
+                      <span className="mg-l10 word-wrap">{chat.chatWith}</span>
                     </ListGroup.Item>
                   ))}
                 </div>
@@ -204,7 +206,7 @@ function ChatTabs() {
                   {friends.map((friend, key) => (
                     <ListGroup.Item key={key} action href={friend} onClick={(e) => handleSelectFriend(friend, e)}>
                       <img className="rounded-circle" alt="profile" src={require("../../assets/images/profile.png")} width="50px" data-holder-rendered="true" />
-                      <span className="mg-l10">{friend}</span>
+                      <span className="mg-l10 word-wrap">{friend}</span>
                     </ListGroup.Item>
                   ))}
                 </div>

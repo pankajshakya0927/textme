@@ -5,7 +5,7 @@ exports.createChat = (req, res, next) => {
   const { members } = req.body;
 
   ChatModel.find({ members: { $all: members } }).then((chat) => {
-    if (chat && chat.length) utils.sendSuccessResponse(res, 200, "Existing chat fetched successfully!", chat);
+    if (chat && chat.length) utils.sendSuccessResponse(res, 200, "Existing chat fetched successfully!", chat[0]);
     else {
       const chat = new ChatModel({
         members: members,
