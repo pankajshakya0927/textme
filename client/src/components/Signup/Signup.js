@@ -11,6 +11,7 @@ import InputGroup from "react-bootstrap/InputGroup";
 import { BsEye, BsEyeSlash } from "react-icons/bs";
 
 import Toastr from "../Toastr/Toastr";
+import config from "../../configurations/config";
 import utils from "../../shared/Utils";
 
 import "../../App.css";
@@ -109,16 +110,17 @@ function Signup() {
 
   const signupHandler = (event) => {
     event.preventDefault();
+
     if (!username || !password) {
       const errorOptions = utils.getErrorToastrOptions("Error", "Username or Password can't be empty");
       setToaster(errorOptions);
     } else {
-      const config = {
+      const reqConfig = {
         "Content-type": "application/json",
       };
 
       axios
-        .post("http://localhost:5000/api/user/signup", { username, password, securityQ, securityA }, config)
+        .post(`${config.apiBaseUrl}/user/signup`, { username, password, securityQ, securityA }, reqConfig)
         .then((resp) => {
           const successOptions = utils.getSuccessToastrOptions(resp.data.message);
           setToaster(successOptions);

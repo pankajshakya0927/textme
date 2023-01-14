@@ -10,6 +10,7 @@ import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
 
 import { AuthContext } from "../../context/AuthContext";
+import config from "../../configurations/config";
 import Toastr from "../Toastr/Toastr";
 import utils from "../../shared/Utils";
 import "../../App.css";
@@ -30,16 +31,19 @@ function Login() {
 
   const loginHandler = (event) => {
     event.preventDefault();
+
     if (!username || !password) {
       const errorOptions = utils.getErrorToastrOptions("Error", "Username or Password can't be empty");
       setToaster(errorOptions);
     } else {
-      const config = {
-        "Content-type": "application/json",
+      const reqConfig = {
+        headers: {
+          "Content-type": "application/json"
+        },
       };
 
       axios
-        .post("http://localhost:5000/api/user/login", { username, password }, config)
+        .post(`${config.apiBaseUrl}/user/login`, { username, password }, reqConfig)
         .then((resp) => {
           if (resp.data.data) {
             utils.setItemToLocalStorage("access_token", resp.data.data.access_token);
