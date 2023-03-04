@@ -78,16 +78,20 @@ io.on("connection", (socket) => {
     sendTo.forEach(user => {
       io.to(user.socketId).emit("newMessageReceived", messageReq);
     });
-  })
+  });
+
+  socket.on('typing', (typingData) => {
+    socket.broadcast.emit('typingStatus', typingData)
+  });
 
   socket.on("fetchMessages", (messageReq) => {
     messageController.fetchMessages(messageReq, socket);
-  })
+  });
 
   socket.on("disconnect", () => {
+    // update connectedUsers as soon as a user is disconnected
     connectedUsers = connectedUsers.filter(user => user.socketId !== socket.id);
-    console.log(connectedUsers);
-  })
+  });
 })
 
 server.listen(port, (error) => {

@@ -12,7 +12,6 @@ export const AuthContextProvider = (props) => {
     const current_user = JSON.parse(Utils.getItemFromLocalStorage("current_user"));
     setIsLoggedIn(true);
     setUsername(current_user.username);
-    console.log(username);
   }
 
   return (

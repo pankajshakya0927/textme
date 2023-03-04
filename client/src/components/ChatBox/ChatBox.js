@@ -21,6 +21,7 @@ export default function ChatBox(props) {
   const { isLoggedIn } = useContext(AuthContext);
   const { username } = useContext(AuthContext);
   const [message, setMessage] = useState("");
+  const [typingStatus, setTypingStatus] = useState("");
 
   const options = utils.getDefaultToastrOptions();
   const [toastr, setToaster] = useState(options);
@@ -28,10 +29,20 @@ export default function ChatBox(props) {
     setToaster(options);
   };
   const lastMessageRef = useRef(null);
+  let typingTimer;
+
+  const handleTyping = () => {
+    let typingData = {
+      text: `${username} is typing...`,
+      from: username,
+      to: props.chatWith
+    }
+    props.socket.emit('typing', typingData);
+  }
 
   const handleSendMessage = (e) => {
     e.preventDefault();
-    
+
     if (isLoggedIn && message) {
       const messageReq = {
         chatId: props.chatId,
@@ -50,6 +61,17 @@ export default function ChatBox(props) {
     lastMessageRef.current.scrollIntoView({ behavior: "smooth" });
   }, [props.messages]);
 
+  useEffect(() => {
+    props.socket.on('typingStatus', (typingData) => {
+      clearTimeout(typingTimer);
+      setTypingStatus(typingData);
+      typingTimer = setTimeout(() => {
+        setTypingStatus("");
+      }, 1000);
+    });
+    lastMessageRef.current.scrollIntoView({ behavior: "smooth" });
+  }, [typingStatus]);
+
   return (
     <>
       <Toastr show={toastr.show} onHide={handleOnHide} variant={toastr.variant} title={toastr.title} message={toastr.message} />
@@ -58,7 +80,6 @@ export default function ChatBox(props) {
         <Card.Header className="d-flex align-items-center justify-content-between">
           <div>
             <h4 className="word-wrap">{props.chatWith}</h4>
-            <span>Typing...</span>
           </div>
           <div>
             <ButtonGroup aria-label="Call">
@@ -71,7 +92,7 @@ export default function ChatBox(props) {
             </ButtonGroup>
           </div>
         </Card.Header>
-        <Card.Body className="overflow-auto">
+        <Card.Body className="overflow-auto chat-box">
           {props.messages.map((msg, key) => (
             <ListGroup key={key} className={msg.from === username ? "align-items-end mb-2" : "align-items-start mb-2"}>
               <ListGroup.Item variant={msg.from === username ? "primary" : ""} key={key}>
@@ -79,6 +100,9 @@ export default function ChatBox(props) {
               </ListGroup.Item>
             </ListGroup>
           ))}
+          {
+            props.chatWith === typingStatus.from && username === typingStatus.to ? <span className="typing">{typingStatus.text}</span> : <span></span>
+          }
           <div ref={lastMessageRef}></div>
         </Card.Body>
         <Card.Footer>
@@ -90,7 +114,7 @@ export default function ChatBox(props) {
               <Button variant="outline-secondary">
                 <GrAttachment size={17} />
               </Button>
-              <Form.Control placeholder="Enter message..." aria-label="Enter message" value={message} onChange={(e) => setMessage(e.target.value)} />
+              <Form.Control placeholder="Enter message..." aria-label="Enter message" value={message} onChange={(e) => setMessage(e.target.value)} onKeyDown={handleTyping} />
               <Button type="Submit" variant="primary" id="send" onClick={(e) => handleSendMessage(e)}>
                 Send
               </Button>

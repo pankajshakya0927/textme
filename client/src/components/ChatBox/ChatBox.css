@@ -5,3 +5,12 @@
 .word-wrap {
     overflow-wrap: anywhere;
 }
+
+.chat-box {
+    padding-bottom: 2px !important;
+}
+
+.typing {
+    font-style: italic;
+    font-size: 14px;
+}
