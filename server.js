@@ -1,6 +1,8 @@
 const app = require("./app");
 const debug = require("debug")("debugger");
 const http = require("http");
+const socketio = require("socket.io");
+const messageController = require("./controllers/messageController");
 
 const normalizePort = (val) => {
   var port = parseInt(val, 10);
@@ -38,7 +40,6 @@ const onError = (error) => {
 };
 
 const onListening = () => {
-  const addr = server.address();
   const bind = typeof port === "string" ? "pipe " + port : "port " + port;
   debug("Listening on " + bind);
 };
@@ -47,8 +48,48 @@ const port = normalizePort(process.env.PORT || "3001");
 app.set("port", port);
 
 const server = http.createServer(app);
+const io = socketio(server, {
+  cors: {
+    origin: "http://localhost:3000"
+  }
+});
+
 server.on("error", onError);
 server.on("listening", onListening);
+
+let connectedUsers = [];
+io.on("connection", (socket) => {
+  for (let [id, socket] of io.of("/").sockets) {
+    const userExists = connectedUsers.some(user => user.socketId === id);
+    if (!userExists && socket.handshake.auth.username) {
+      connectedUsers.push({
+        socketId: id,
+        username: socket.handshake.auth.username
+      });
+    }
+  }
+
+  socket.on("sendMessage", (messageReq) => {
+    // save the new message
+    messageController.saveMessage(messageReq, socket);
+    const sendTo = connectedUsers.filter(user => user.username === messageReq.to); // if user has opened multiple tabs
+
+    // emit the new message to all recipients socket id
+    sendTo.forEach(user => {
+      io.to(user.socketId).emit("newMessageReceived", messageReq);
+    });
+  })
+
+  socket.on("fetchMessages", (messageReq) => {
+    messageController.fetchMessages(messageReq, socket);
+  })
+
+  socket.on("disconnect", () => {
+    connectedUsers = connectedUsers.filter(user => user.socketId !== socket.id);
+    console.log(connectedUsers);
+  })
+})
+
 server.listen(port, (error) => {
   error ? console.log("Something went wrong!") : console.log("Server is listening on port " + port);
 });

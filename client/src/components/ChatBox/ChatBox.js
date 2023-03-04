@@ -1,5 +1,4 @@
-import React, { useState, useContext } from "react";
-import axios from "axios";
+import React, { useState, useContext, useEffect, useRef } from "react";
 
 import Button from "react-bootstrap/Button";
 import Card from "react-bootstrap/Card";
@@ -15,55 +14,41 @@ import ListGroup from "react-bootstrap/ListGroup";
 import { AuthContext } from "../../context/AuthContext";
 import Toastr from "../Toastr/Toastr";
 import utils from "../../shared/Utils";
-import config from "../../configurations/config";
 
 import "./ChatBox.css";
 
 export default function ChatBox(props) {
   const { isLoggedIn } = useContext(AuthContext);
-  const [message, setMessage] = useState();
+  const { username } = useContext(AuthContext);
+  const [message, setMessage] = useState("");
 
   const options = utils.getDefaultToastrOptions();
   const [toastr, setToaster] = useState(options);
   const handleOnHide = () => {
     setToaster(options);
   };
-
-  const access_token = utils.getItemFromLocalStorage("access_token");
-  const current_user = JSON.parse(utils.getItemFromLocalStorage("current_user"));
-  const reqConfig = {
-    headers: {
-      "Content-type": "application/json",
-      Authorization: `Bearer ${access_token}`,
-    },
-  };
+  const lastMessageRef = useRef(null);
 
   const handleSendMessage = (e) => {
     e.preventDefault();
-    setMessage("");
-
+    
     if (isLoggedIn && message) {
       const messageReq = {
         chatId: props.chatId,
         message: message,
+        from: username,
+        to: props.chatWith
       };
 
-      axios
-        .post(`${config.apiBaseUrl}/message/send`, messageReq, reqConfig)
-        .then(
-          (resp) => {
-            console.log("message sent successfully");
-          },
-          (error) => {
-            const errorOptions = utils.getErrorToastrOptions(error.response.data.error, error.response.data.message);
-            setToaster(errorOptions);
-          }
-        )
-        .catch((err) => {
-          console.error(err);
-        });
+      props.socket.emit("sendMessage", messageReq);
+      setMessage("");
     }
   };
+
+  useEffect(() => {
+    // scroll to bottom every time messages change
+    lastMessageRef.current.scrollIntoView({ behavior: "smooth" });
+  }, [props.messages]);
 
   return (
     <>
@@ -88,12 +73,13 @@ export default function ChatBox(props) {
         </Card.Header>
         <Card.Body className="overflow-auto">
           {props.messages.map((msg, key) => (
-            <ListGroup key={key} className={msg.sender === current_user.username ? "align-items-end mb-2" : "align-items-start mb-2"}>
-              <ListGroup.Item variant={msg.sender === current_user.username ? "primary" : ""} key={key}>
+            <ListGroup key={key} className={msg.from === username ? "align-items-end mb-2" : "align-items-start mb-2"}>
+              <ListGroup.Item variant={msg.from === username ? "primary" : ""} key={key}>
                 {msg.message}
               </ListGroup.Item>
             </ListGroup>
           ))}
+          <div ref={lastMessageRef}></div>
         </Card.Body>
         <Card.Footer>
           <Form>

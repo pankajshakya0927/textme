@@ -1,37 +1,39 @@
 const MessageModel = require("../models/message");
-const utils = require("../utilities/utils");
 
-exports.sendMessage = (req, res, next) => {
-  const { chatId, message } = req.body;
-  const { username } = req.currentUser;
+exports.saveMessage = (messageReq, socket) => {
+  const { chatId, message, from, to } = messageReq;
 
   const chat = new MessageModel({
-    chatId: chatId,
-    sender: username,
-    message: message,
+    chatId,
+    message,
+    from,
+    to,
   });
 
-  chat.save((err, result) => {
-    if (err) {
-      utils.sendErrorResponse(res, 400, err.name, err.message);
-    } else {
-      utils.sendSuccessResponse(res, 200, "Message sent successfully!", null);
-    }
-  });
+  try {
+    chat.save((err, result) => {
+      if (err) {
+        console.log("Failed to save message!")
+      } else {
+        this.fetchMessages(messageReq, socket); // return all messages after saving the new message
+      }
+    });
+  } catch (error) {
+    console.log(error);
+  }
 };
 
-exports.fetchMessages = (req, res, next) => {
-  const { chatId } = req.query;
+exports.fetchMessages = (req, socket) => {
+  const { chatId } = req;
 
-  const ascSort = {'_id': 1}; // _id ObjectId in mongo stores timestamp
+  const ascSort = { '_id': 1 }; // _id ObjectId in mongo stores timestamp
   try {
-    MessageModel.find(
-      { chatId: chatId },
+    MessageModel.find({ chatId: chatId },
       (err, messages) => {
-        utils.sendSuccessResponse(res, 200, "Messages fetched successfully", messages);
+        socket.emit("fetchMessages", messages);
       },
       (err) => {
-        utils.sendErrorResponse(res, 400, "Error", "Failed to fetch chats");
+        console.log("Failed to fetch Chats");
       }
     ).sort(ascSort);
   } catch (error) {

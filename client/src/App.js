@@ -26,7 +26,7 @@ function App() {
             <Login />
           </Route>
           <Route exact path="/chats" component={ChatTabs}>
-            <ChatTabs />
+            <ChatTabs/>
           </Route>
         </Switch>
       </Router>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext, useRef } from "react";
 import axios from "axios";
 import { useHistory } from "react-router-dom";
+import io from "socket.io-client";
 
 import ListGroup from "react-bootstrap/ListGroup";
 import Col from "react-bootstrap/Col";
@@ -15,18 +16,21 @@ import { AuthContext } from "../../context/AuthContext";
 import { FriendsContext } from "../../context/FriendsContext";
 import "./ChatTabs.css";
 
+const socket = io.connect("ws://localhost:3001");
+
 function ChatTabs() {
   const [friends, setFriends] = useState([]);
   const [chats, setChats] = useState([]);
   const [messages, setMessages] = useState([]);
+  const [newMessage, setNewMessage] = useState([]);
   const [tab, setTab] = useState(1);
   const [selectedChat, setSelectedChat] = useState();
   const [chatId, setChatId] = useState();
   const { updatedFriends } = useContext(FriendsContext);
   const { isLoggedIn } = useContext(AuthContext);
+  const { username } = useContext(AuthContext);
 
   const access_token = utils.getItemFromLocalStorage("access_token");
-  const current_user = JSON.parse(utils.getItemFromLocalStorage("current_user"));
 
   const reqConfig = {
     headers: {
@@ -49,19 +53,37 @@ function ChatTabs() {
   }
 
   useEffect(() => {
+    socket.auth = { username };
+  }, [username]);
+
+  useEffect(() => {
     if (isLoggedIn && shouldFetch.current) {
       shouldFetch.current = false;
       fetchChats();
       fetchFriends();
     }
+
+    socket.on("fetchMessages", (messages) => {
+      setMessages(messages);
+    })
   }, []);
+
+  useEffect(() => {
+    socket.on("newMessageReceived", (newMessage) => {
+      setNewMessage(newMessage);
+    })
+  }, [messages]);
+
+  useEffect(() => {
+    if (newMessage && newMessage.from === selectedChat) setMessages((prev) => [...prev, newMessage]);
+  }, [newMessage]);
 
   const handleSelectFriend = (friend, e) => {
     e.preventDefault();
 
     if (isLoggedIn) {
       const chatReq = {
-        members: [friend, current_user.username],
+        members: [friend, username],
       };
 
       axios
@@ -72,7 +94,7 @@ function ChatTabs() {
               const chatRes = resp.data.data;
               fetchChats();
 
-              const chatWith = chatRes.members.find((member) => member !== current_user.username);
+              const chatWith = chatRes.members.find((member) => member !== username);
               setSelectedChat(chatWith);
               setTab(1); // Clicking on friend should open the chat with them
 
@@ -118,7 +140,7 @@ function ChatTabs() {
           if (resp && resp.data && resp.data.data) {
             const chats = [];
             resp.data.data.forEach((chat) => {
-              const chatWith = chat.members.find((member) => member !== current_user.username);
+              const chatWith = chat.members.find((member) => member !== username);
               chats.push({
                 chatId: chat._id,
                 chatWith: chatWith,
@@ -139,28 +161,8 @@ function ChatTabs() {
     setChatId(chatId);
     setSelectedChat(chat.chatWith);
 
-    const messageReq = {
-      headers: {
-        "Content-type": "application/json",
-        Authorization: `Bearer ${access_token}`,
-      },
-      params: {
-        chatId: chatId,
-      },
-    };
-
     if (isLoggedIn && chatId) {
-      axios
-        .get(`${config.apiBaseUrl}/message/fetchAll`, messageReq)
-        .then((resp) => {
-          if (resp && resp.data && resp.data.data) {
-            setMessages(resp.data.data);
-          }
-        })
-        .catch((error) => {
-          const errorOptions = utils.getErrorToastrOptions(error.response.data.error, error.response.data.message);
-          setToaster(errorOptions);
-        });
+      socket.emit("fetchMessages", chat);
     }
   };
 
@@ -222,7 +224,7 @@ function ChatTabs() {
             ) : null}
             <Tab.Content>
               <Tab.Pane eventKey={selectedChat}>
-                <ChatBox chatId={chatId} chatWith={selectedChat} messages={messages} />
+                <ChatBox chatId={chatId} chatWith={selectedChat} messages={messages} setMessages={setMessages} socket={socket} />
               </Tab.Pane>
             </Tab.Content>
           </Col>
