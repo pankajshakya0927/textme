@@ -16,7 +16,7 @@ import { AuthContext } from "../../context/AuthContext";
 import { FriendsContext } from "../../context/FriendsContext";
 import "./ChatTabs.css";
 
-const socket = io.connect("https://textme.up.railway.app/");
+const socket = io.connect("https://textme.up.railway.app/", { transports: ['websocket'], upgrade: false });
 
 function ChatTabs() {
   const [friends, setFriends] = useState([]);
@@ -196,7 +196,7 @@ function ChatTabs() {
       <Tab.Container id="list-group-tabs">
         <Row className={friends && friends.length ? "tabs g-1" : "hide"}>
           {isMobile}
-          <Col sm={4} style={{display: isMobile && selectedChat ? 'none': 'block'}}>
+          <Col sm={4} style={{ display: isMobile && selectedChat ? 'none' : 'block' }}>
             <ListGroup>
               <ListGroup.Item>
                 <ListGroup horizontal>
@@ -230,7 +230,7 @@ function ChatTabs() {
               )}
             </ListGroup>
           </Col>
-          <Col sm={8} style={{display: isMobile && !selectedChat ? 'none': 'block'}}>
+          <Col sm={8} style={{ display: isMobile && !selectedChat ? 'none' : 'block' }}>
             {!selectedChat ? (
               <h5 className="align-center">
                 Choose a chat to start the conversation
@@ -239,7 +239,7 @@ function ChatTabs() {
             ) : null}
             <Tab.Content>
               <Tab.Pane eventKey={selectedChat}>
-                <ChatBox chatId={chatId} chatWith={selectedChat} setSelectedChat={setSelectedChat} messages={messages} setMessages={setMessages} socket={socket}/>
+                <ChatBox chatId={chatId} chatWith={selectedChat} setSelectedChat={setSelectedChat} messages={messages} setMessages={setMessages} socket={socket} />
               </Tab.Pane>
             </Tab.Content>
           </Col>
