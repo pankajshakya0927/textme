@@ -48,11 +48,7 @@ const port = normalizePort(process.env.PORT || "3001");
 app.set("port", port);
 
 const server = http.createServer(app);
-const io = socketio(server, {
-  cors: {
-    origin: "http://localhost:3000"
-  }
-});
+const io = socketio(server);
 
 server.on("error", onError);
 server.on("listening", onListening);
