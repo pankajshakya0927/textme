@@ -19,6 +19,7 @@ app.use((req, res, next) => {
   next();
 });
 
+app.get('/api', (req, res) => res.send('TextMe API Working successfully ✅'))
 app.use("/api/user", userRoute);
 app.use("/api/chat", chatRoute);
 
