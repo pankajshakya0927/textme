@@ -16,7 +16,7 @@ import { AuthContext } from "../../context/AuthContext";
 import { FriendsContext } from "../../context/FriendsContext";
 import "./ChatTabs.css";
 
-const socket = io.connect("https://textme.up.railway.app/", { transports: ['websocket'], upgrade: false });
+const socket = io.connect("https://textme.up.railway.app/", { transports: ['websocket']});
 
 function ChatTabs() {
   const [friends, setFriends] = useState([]);

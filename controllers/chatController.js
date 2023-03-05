@@ -40,3 +40,13 @@ exports.fetchChats = (req, res, next) => {
     console.log(error);
   }
 };
+
+exports.fetchChatDetails = (req, res) => {
+  const { chatId } = req;
+
+  try {
+    return ChatModel.find({ _id: chatId });
+  } catch (error) {
+    console.log(error);
+  }
+};

@@ -48,7 +48,11 @@ const port = normalizePort(process.env.PORT || "3001");
 app.set("port", port);
 
 const server = http.createServer(app);
-const io = socketio(server);
+const io = socketio(server, {
+  cors: {
+    origin: "https://textme.up.railway.app"
+  }
+});
 
 server.on("error", onError);
 server.on("listening", onListening);
