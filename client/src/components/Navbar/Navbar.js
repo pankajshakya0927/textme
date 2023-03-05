@@ -28,7 +28,7 @@ function NavbarOffCanvas() {
   let options = utils.getDefaultToastrOptions();
   const [toastr, setToaster] = useState(options);
   const current_user = JSON.parse(utils.getItemFromLocalStorage('current_user'));
-  
+
   const handleOnShow = () => [setShow(true)];
   const handleOnHide = () => [setShow(false)];
 
@@ -51,6 +51,10 @@ function NavbarOffCanvas() {
   }
 
   useEffect(() => {
+    fetchAllUsers();
+  }, [isLoggedIn]);
+
+  const fetchAllUsers = async () => {
     if (isLoggedIn && shouldFetch.current) {
       shouldFetch.current = false;
       const access_token = utils.getItemFromLocalStorage("access_token");
@@ -62,7 +66,7 @@ function NavbarOffCanvas() {
         },
       };
 
-      axios
+      await axios
         .get(`${config.apiBaseUrl}/user/fetchAllUsers`, reqConfig)
         .then((resp) => {
           if (resp && resp.data && resp.data.data) setUsers(resp.data.data);
@@ -72,7 +76,7 @@ function NavbarOffCanvas() {
           setToaster(errorOptions);
         });
     }
-  }, [isLoggedIn]);
+  }
 
   const navigateTo = (path) => {
     history.push(path);

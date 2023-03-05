@@ -33,7 +33,7 @@ function AddFriends(props) {
     props.onHide();
   };
 
-  const handleAddFriend = (username) => {
+  const handleAddFriend = async (username) => {
     const access_token = utils.getItemFromLocalStorage("access_token");
     const reqConfig = {
       headers: {
@@ -46,7 +46,7 @@ function AddFriends(props) {
       username: username,
     };
 
-    axios
+    await axios
       .post(`${config.apiBaseUrl}/user/addFriend`, addUser, reqConfig)
       .then((resp) => {
         if (resp && resp.data) {

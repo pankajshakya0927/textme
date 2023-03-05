@@ -16,7 +16,7 @@ import { AuthContext } from "../../context/AuthContext";
 import { FriendsContext } from "../../context/FriendsContext";
 import "./ChatTabs.css";
 
-const socket = io.connect("https://textme.up.railway.app/", { transports: ['websocket']});
+const socket = io.connect("https://textme.up.railway.app/", { transports: ['websocket'] });
 
 function ChatTabs() {
   const [friends, setFriends] = useState([]);
@@ -92,7 +92,7 @@ function ChatTabs() {
     if (newMessage && newMessage.from === selectedChat) setMessages((prev) => [...prev, newMessage]);
   }, [newMessage]);
 
-  const handleSelectFriend = (friend, e) => {
+  const handleSelectFriend = async (friend, e) => {
     e.preventDefault();
 
     if (isLoggedIn) {
@@ -100,7 +100,7 @@ function ChatTabs() {
         members: [friend, username],
       };
 
-      axios
+      await axios
         .post(`${config.apiBaseUrl}/chat/createChat`, chatReq, reqConfig)
         .then(
           (resp) => {
@@ -130,8 +130,8 @@ function ChatTabs() {
     }
   };
 
-  const fetchFriends = () => {
-    axios
+  const fetchFriends = async () => {
+    await axios
       .get(`${config.apiBaseUrl}/user/fetchFriends`, reqConfig)
       .then((resp) => {
         if (resp && resp.data && resp.data.data) {
@@ -146,9 +146,9 @@ function ChatTabs() {
       });
   };
 
-  const fetchChats = () => {
+  const fetchChats = async () => {
     if (isLoggedIn) {
-      axios
+      await axios
         .get(`${config.apiBaseUrl}/chat/fetchChats`, reqConfig)
         .then((resp) => {
           if (resp && resp.data && resp.data.data) {

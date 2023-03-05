@@ -29,7 +29,7 @@ function Login() {
 
   const history = useHistory();
 
-  const loginHandler = (event) => {
+  const loginHandler = async (event) => {
     event.preventDefault();
 
     if (!username || !password) {
@@ -42,7 +42,7 @@ function Login() {
         },
       };
 
-      axios
+      await axios
         .post(`${config.apiBaseUrl}/user/login`, { username, password }, reqConfig)
         .then((resp) => {
           if (resp.data.data) {

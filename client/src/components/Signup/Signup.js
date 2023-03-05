@@ -108,7 +108,7 @@ function Signup() {
     } else setPasswordType("password");
   };
 
-  const signupHandler = (event) => {
+  const signupHandler = async (event) => {
     event.preventDefault();
 
     if (!username || !password) {
@@ -119,7 +119,7 @@ function Signup() {
         "Content-type": "application/json",
       };
 
-      axios
+      await axios
         .post(`${config.apiBaseUrl}/user/signup`, { username, password, securityQ, securityA }, reqConfig)
         .then((resp) => {
           const successOptions = utils.getSuccessToastrOptions(resp.data.message);
