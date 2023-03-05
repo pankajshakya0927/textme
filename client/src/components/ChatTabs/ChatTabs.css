@@ -10,6 +10,10 @@
     height: calc(100vh - 159px) !important;
 }
 
+.chats-tab a:visited {
+    color: red !important;
+}
+
 .chatName span {
     margin-left: 10px;
 }
@@ -104,4 +108,14 @@
 
 .word-wrap {
     overflow-wrap: anywhere;
+}
+
+.list-group-item.active {
+    color: #000 !important;
+    background-color: #fff !important;
+    border-color: rgb(0, 0, 0, 0.13) !important;
+}
+
+.list-group-item.active:hover {
+    background-color: rgb(0, 0, 0, 0.03) !important;
 }

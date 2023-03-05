@@ -9,6 +9,7 @@ import { MdCall } from "react-icons/md";
 import { FcVideoCall } from "react-icons/fc";
 import { BiSmile } from "react-icons/bi";
 import { GrAttachment } from "react-icons/gr";
+import { IoMdArrowRoundBack } from "react-icons/io";
 import ListGroup from "react-bootstrap/ListGroup";
 
 import { AuthContext } from "../../context/AuthContext";
@@ -78,7 +79,10 @@ export default function ChatBox(props) {
 
       <Card className="box">
         <Card.Header className="d-flex align-items-center justify-content-between">
-          <div>
+          <div className="flex">
+            <Button className="back-btn" variant="light" onClick={() => props.setSelectedChat(null)}>
+              <IoMdArrowRoundBack size={30} />
+            </Button>
             <h4 className="word-wrap">{props.chatWith}</h4>
           </div>
           <div>
@@ -98,6 +102,7 @@ export default function ChatBox(props) {
               <ListGroup.Item variant={msg.from === username ? "primary" : ""} key={key}>
                 {msg.message}
               </ListGroup.Item>
+              {/* <span>{new Date(msg.createdAt).toDateString()}</span> */}
             </ListGroup>
           ))}
           {

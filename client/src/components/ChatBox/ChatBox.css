@@ -14,3 +14,13 @@
     font-style: italic;
     font-size: 14px;
 }
+
+.back-btn {
+    margin: 0 !important;
+}
+
+@media only screen and (min-width: 576px) {
+    .back-btn {
+        display: none !important;
+    }
+}

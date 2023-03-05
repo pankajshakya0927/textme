@@ -29,6 +29,20 @@ function ChatTabs() {
   const { updatedFriends } = useContext(FriendsContext);
   const { isLoggedIn } = useContext(AuthContext);
   const { username } = useContext(AuthContext);
+  const [width, setWidth] = useState(window.innerWidth);
+
+  function handleWindowSizeChange() {
+    setWidth(window.innerWidth);
+  }
+
+  useEffect(() => {
+    window.addEventListener('resize', handleWindowSizeChange);
+    return () => {
+      window.removeEventListener('resize', handleWindowSizeChange);
+    }
+  }, [width]);
+
+  const isMobile = width <= 576;
 
   const access_token = utils.getItemFromLocalStorage("access_token");
 
@@ -181,7 +195,8 @@ function ChatTabs() {
       <Toastr show={toastr.show} onHide={handleOnHide} variant={toastr.variant} title={toastr.title} message={toastr.message} />
       <Tab.Container id="list-group-tabs">
         <Row className={friends && friends.length ? "tabs g-1" : "hide"}>
-          <Col sm={4}>
+          {isMobile}
+          <Col sm={4} style={{display: isMobile && selectedChat ? 'none': 'block'}}>
             <ListGroup>
               <ListGroup.Item>
                 <ListGroup horizontal>
@@ -215,7 +230,7 @@ function ChatTabs() {
               )}
             </ListGroup>
           </Col>
-          <Col sm={8}>
+          <Col sm={8} style={{display: isMobile && !selectedChat ? 'none': 'block'}}>
             {!selectedChat ? (
               <h5 className="align-center">
                 Choose a chat to start the conversation
@@ -224,7 +239,7 @@ function ChatTabs() {
             ) : null}
             <Tab.Content>
               <Tab.Pane eventKey={selectedChat}>
-                <ChatBox chatId={chatId} chatWith={selectedChat} messages={messages} setMessages={setMessages} socket={socket} />
+                <ChatBox chatId={chatId} chatWith={selectedChat} setSelectedChat={setSelectedChat} messages={messages} setMessages={setMessages} socket={socket}/>
               </Tab.Pane>
             </Tab.Content>
           </Col>
