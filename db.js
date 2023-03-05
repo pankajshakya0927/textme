@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
-// const connectionUrl = "mongodb+srv://admin:<m7hLCFMhOXRNfBm3>@cluster0.g3oavg8.mongodb.net/?retryWrites=true&w=majority";
-const connectionUrl = "mongodb://127.0.0.1:27017/textme"; // local connection url
+const connectionUrl = "mongodb+srv://admin:<m7hLCFMhOXRNfBm3>@cluster0.g3oavg8.mongodb.net/?retryWrites=true&w=majority";
+// const connectionUrl = "mongodb://127.0.0.1:27017/textme"; // local connection url
 
 mongoose.connect(
   process.env.MONGODB_URI || connectionUrl,
