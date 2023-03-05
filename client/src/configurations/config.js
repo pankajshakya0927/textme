@@ -1,3 +1,3 @@
 export default {
-    apiBaseUrl: "http://localhost:3001/api"
+    apiBaseUrl: "https://textme.up.railway.app/api"
 }
