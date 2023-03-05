@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-const connectionUrl = "mongodb+srv://admin:<6YGfGPw03iC5Mx8G>@cluster0.6bcdj9j.mongodb.net/?retryWrites=true&w=majority";
+const connectionUrl = "mongodb+srv://admin:6YGfGPw03iC5Mx8G@cluster0.6bcdj9j.mongodb.net/?retryWrites=true&w=majority";
 // const connectionUrl = "mongodb://127.0.0.1:27017/textme"; // local connection url
 
 mongoose.connect(
