@@ -4,10 +4,12 @@ const db = require("./db");
 const bodyParser = require("body-parser");
 const path = require("path");
 const cors = require('cors');
+const helmet = require("helmet");
 
 const userRoute = require("./routes/user");
 const chatRoute = require("./routes/chat");
 
+app.use(helmet());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(cors());
