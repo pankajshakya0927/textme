@@ -9,7 +9,6 @@ const helmet = require("helmet");
 const userRoute = require("./routes/user");
 const chatRoute = require("./routes/chat");
 
-app.use(helmet());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(cors());
