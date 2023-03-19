@@ -11,6 +11,7 @@ import Offcanvas from "react-bootstrap/Offcanvas";
 import ButtonGroup from "react-bootstrap/ButtonGroup";
 import { HiUserAdd } from "react-icons/hi";
 import { MdNotifications } from "react-icons/md";
+import { AiOutlineClose } from "react-icons/ai";
 
 import AddFriends from "../AddFriends/AddFriends";
 import { AuthContext } from "../../context/AuthContext";
@@ -36,12 +37,19 @@ function NavbarOffCanvas() {
     setToaster(options);
   };
 
+  const [navExpanded, setNavExpanded] = useState(false);
+  const closeNavBar = () => {
+    setNavExpanded(false);
+  }
+
   const handleLogin = () => {
     history.push("/login");
+    closeNavBar();
   }
 
   const handleSignup = () => {
     history.push("/signup");
+    closeNavBar();
   }
 
   const handleLogout = () => {
@@ -80,6 +88,7 @@ function NavbarOffCanvas() {
 
   const navigateTo = (path) => {
     history.push(path);
+    closeNavBar();
   }
 
   return (
@@ -88,7 +97,7 @@ function NavbarOffCanvas() {
       <Toastr show={toastr.show} onHide={handleOnHideToastr} variant={toastr.variant} title={toastr.title} message={toastr.message} />
 
       {["md"].map((expand) => (
-        <Navbar sticky="top" bg="primary" variant="dark" key={expand} expand={expand}>
+        <Navbar sticky="top" bg="primary" variant="dark" key={expand} expand={expand} expanded={navExpanded}>
           <Container fluid>
             <Navbar.Brand href="#">TextMe</Navbar.Brand>
             {isLoggedIn ? (
@@ -103,20 +112,21 @@ function NavbarOffCanvas() {
                 </ButtonGroup>
               </div>
             ) : null}
-            <Navbar.Toggle aria-controls={`offcanvasNavbar-expand-${expand}`} />
+            <Navbar.Toggle aria-controls={`offcanvasNavbar-expand-${expand}`} onClick={() => setNavExpanded(navExpanded ? false : "expanded")}/>
             <Navbar.Offcanvas id={`offcanvasNavbar-expand-${expand}`} aria-labelledby={`offcanvasNavbarLabel-expand-${expand}`} placement="end">
-              <Offcanvas.Header closeButton>
-                <Offcanvas.Title id={`offcanvasNavbarLabel-expand-${expand}`}>Offcanvas</Offcanvas.Title>
+              <Offcanvas.Header>
+              <Offcanvas.Title id={`offcanvasNavbarLabel-expand-${expand}`}>TextMe</Offcanvas.Title>
+              <AiOutlineClose className="pointer" size={28} onClick={closeNavBar} />
               </Offcanvas.Header>
               <Offcanvas.Body>
                 <Nav className="justify-content-end flex-grow-1 pe-3">
                   <Nav.Link onClick={() => navigateTo('/')}>Home</Nav.Link>
-                  <Nav.Link>Contact Us</Nav.Link>
+                  {/* <Nav.Link>Contact Us</Nav.Link> */}
                   {isLoggedIn ? (
                     <NavDropdown title={current_user.username} align="end" id={`offcanvasNavbarDropdown-expand-${expand}`}>
-                      <NavDropdown.Item>Update Profile</NavDropdown.Item>
-                      <NavDropdown.Item>Account Settings</NavDropdown.Item>
-                      <NavDropdown.Divider />
+                      {/* <NavDropdown.Item>Update Profile</NavDropdown.Item>
+                      <NavDropdown.Item>Account Settings</NavDropdown.Item> */}
+                      {/* <NavDropdown.Divider /> */}
                       <NavDropdown.Item onClick={handleLogout}>Logout</NavDropdown.Item>
                     </NavDropdown>
                   ) : (

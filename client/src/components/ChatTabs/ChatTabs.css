@@ -10,6 +10,11 @@
     height: calc(100vh - 159px) !important;
 }
 
+.selected {
+    background: #0C6DFD !important;
+    color: #fff !important;
+}
+
 .chats-tab a:visited {
     color: red !important;
 }

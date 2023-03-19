@@ -7,3 +7,7 @@
     align-items: center;
     gap: 10px;
 }
+
+.pointer {
+    cursor: pointer;
+}

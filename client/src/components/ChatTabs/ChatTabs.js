@@ -200,10 +200,10 @@ function ChatTabs() {
             <ListGroup>
               <ListGroup.Item>
                 <ListGroup horizontal>
-                  <ListGroup.Item action onClick={(e) => handleSetTab(1, e)}>
+                  <ListGroup.Item className={tab === 1 ? 'selected' : ''} action onClick={(e) => handleSetTab(1, e)}>
                     Chats
                   </ListGroup.Item>
-                  <ListGroup.Item action onClick={(e) => handleSetTab(2, e)}>
+                  <ListGroup.Item className={tab === 2 ? 'selected' : ''} action onClick={(e) => handleSetTab(2, e)}>
                     Friends
                   </ListGroup.Item>
                 </ListGroup>
@@ -233,7 +233,7 @@ function ChatTabs() {
           <Col sm={8} style={{ display: isMobile && !selectedChat ? 'none' : 'block' }}>
             {!selectedChat ? (
               <h5 className="align-center">
-                Choose a chat to start the conversation
+                Choose a chat to start the conversation &nbsp;
                 <span className="emoji monkey" role="img" aria-label="monkey"></span>
               </h5>
             ) : null}
@@ -252,7 +252,7 @@ function ChatTabs() {
               <span role="img" aria-label="wave" className="wave">
                 👋
               </span>{" "}
-              Welcome to TextMe!!! <br />
+              Welcome to TextMe!!! <br /><br />
               Add your first friend to get the fun started.
             </h5>
           ) : (
