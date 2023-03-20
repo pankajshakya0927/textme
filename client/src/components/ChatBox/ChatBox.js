@@ -14,23 +14,25 @@ import ListGroup from "react-bootstrap/ListGroup";
 
 import { AuthContext } from "../../context/AuthContext";
 import Toastr from "../Toastr/Toastr";
-import utils from "../../shared/Utils";
+import Utils from "../../shared/Utils";
 
 import "./ChatBox.css";
 
 export default function ChatBox(props) {
   const { isLoggedIn } = useContext(AuthContext);
-  const { username } = useContext(AuthContext);
   const [message, setMessage] = useState("");
   const [typingStatus, setTypingStatus] = useState("");
 
-  const options = utils.getDefaultToastrOptions();
+  const options = Utils.getDefaultToastrOptions();
   const [toastr, setToaster] = useState(options);
   const handleOnHide = () => {
     setToaster(options);
   };
   const lastMessageRef = useRef(null);
   let typingTimer;
+  let username = null;
+  const current_user = JSON.parse(Utils.getItemFromLocalStorage("current_user"));
+  if (current_user) username = current_user.username;
 
   const handleTyping = () => {
     let typingData = {
@@ -52,6 +54,7 @@ export default function ChatBox(props) {
         to: props.chatWith
       };
 
+      console.log(messageReq);
       props.socket.emit("sendMessage", messageReq);
       setMessage("");
     }

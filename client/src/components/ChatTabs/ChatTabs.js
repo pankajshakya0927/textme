@@ -10,7 +10,7 @@ import Tab from "react-bootstrap/Tab";
 
 import ChatBox from "../ChatBox/ChatBox";
 import Toastr from "../Toastr/Toastr";
-import utils from "../../shared/Utils";
+import Utils from "../../shared/Utils";
 import config from "../../configurations/config";
 import { AuthContext } from "../../context/AuthContext";
 import { FriendsContext } from "../../context/FriendsContext";
@@ -28,7 +28,6 @@ function ChatTabs() {
   const [chatId, setChatId] = useState();
   const { updatedFriends } = useContext(FriendsContext);
   const { isLoggedIn } = useContext(AuthContext);
-  const { username } = useContext(AuthContext);
   const [width, setWidth] = useState(window.innerWidth);
 
   function handleWindowSizeChange() {
@@ -43,8 +42,10 @@ function ChatTabs() {
   }, [width]);
 
   const isMobile = width <= 576;
-
-  const access_token = utils.getItemFromLocalStorage("access_token");
+  let username = null;
+  const access_token = Utils.getItemFromLocalStorage("access_token");
+  const current_user = JSON.parse(Utils.getItemFromLocalStorage("current_user"));
+  if (current_user) username = current_user.username;
 
   const reqConfig = {
     headers: {
@@ -56,7 +57,7 @@ function ChatTabs() {
   const shouldFetch = useRef(true);
   const history = useHistory();
 
-  const options = utils.getDefaultToastrOptions();
+  const options = Utils.getDefaultToastrOptions();
   const [toastr, setToaster] = useState(options);
   const handleOnHide = () => {
     setToaster(options);
@@ -120,7 +121,7 @@ function ChatTabs() {
             }
           },
           (error) => {
-            const errorOptions = utils.getErrorToastrOptions(error.response.data.error, error.response.data.message);
+            const errorOptions = Utils.getErrorToastrOptions(error.response.data.error, error.response.data.message);
             setToaster(errorOptions);
           }
         )
@@ -139,10 +140,10 @@ function ChatTabs() {
         }
       })
       .catch((error) => {
-        const errorOptions = utils.getErrorToastrOptions(error.response.data.error, error.response.data.message);
+        const errorOptions = Utils.getErrorToastrOptions(error.response.data.error, error.response.data.message);
         setToaster(errorOptions);
         history.push("/login");
-        utils.logout();
+        Utils.logout();
       });
   };
 
@@ -164,7 +165,7 @@ function ChatTabs() {
           }
         })
         .catch((error) => {
-          const errorOptions = utils.getErrorToastrOptions(error.response.data.error, error.response.data.message);
+          const errorOptions = Utils.getErrorToastrOptions(error.response.data.error, error.response.data.message);
           setToaster(errorOptions);
         });
     }

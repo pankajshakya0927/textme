@@ -12,7 +12,7 @@ import Col from "react-bootstrap/Col";
 import { AuthContext } from "../../context/AuthContext";
 import config from "../../configurations/config";
 import Toastr from "../Toastr/Toastr";
-import utils from "../../shared/Utils";
+import Utils from "../../shared/Utils";
 import "../../App.css";
 
 function Login() {
@@ -20,7 +20,7 @@ function Login() {
   const [password, setPassword] = useState();
   const { setIsLoggedIn } = useContext(AuthContext);
 
-  let options = utils.getDefaultToastrOptions();
+  let options = Utils.getDefaultToastrOptions();
   const [toastr, setToaster] = useState(options);
 
   const handleOnHide = () => {
@@ -33,7 +33,7 @@ function Login() {
     event.preventDefault();
 
     if (!username || !password) {
-      const errorOptions = utils.getErrorToastrOptions("Error", "Username or Password can't be empty");
+      const errorOptions = Utils.getErrorToastrOptions("Error", "Username or Password can't be empty");
       setToaster(errorOptions);
     } else {
       const reqConfig = {
@@ -46,15 +46,15 @@ function Login() {
         .post(`${config.apiBaseUrl}/user/login`, { username, password }, reqConfig)
         .then((resp) => {
           if (resp.data.data) {
-            utils.setItemToLocalStorage("access_token", resp.data.data.access_token);
-            utils.setItemToLocalStorage("current_user", JSON.stringify(resp.data.data.current_user));
-            utils.setItemToLocalStorage("isLoggedIn", true);
+            Utils.setItemToLocalStorage("access_token", resp.data.data.access_token);
+            Utils.setItemToLocalStorage("current_user", JSON.stringify(resp.data.data.current_user));
+            Utils.setItemToLocalStorage("isLoggedIn", true);
             setIsLoggedIn(true);
             history.push("/chats");
           }
         })
         .catch((error) => {
-          const errorOptions = utils.getErrorToastrOptions(error.response.data.error, error.response.data.message);
+          const errorOptions = Utils.getErrorToastrOptions(error.response.data.error, error.response.data.message);
           setToaster(errorOptions);
         });
     }

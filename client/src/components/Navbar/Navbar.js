@@ -16,7 +16,7 @@ import { AiOutlineClose } from "react-icons/ai";
 import AddFriends from "../AddFriends/AddFriends";
 import { AuthContext } from "../../context/AuthContext";
 import Toastr from "../Toastr/Toastr";
-import utils from "../../shared/Utils";
+import Utils from "../../shared/Utils";
 import config from "../../configurations/config";
 
 function NavbarOffCanvas() {
@@ -26,9 +26,9 @@ function NavbarOffCanvas() {
   const { isLoggedIn, setIsLoggedIn } = useContext(AuthContext);
   const shouldFetch = useRef(true); // useEffect runs twice thereby calling the api twice, this will avoid that
 
-  let options = utils.getDefaultToastrOptions();
+  let options = Utils.getDefaultToastrOptions();
   const [toastr, setToaster] = useState(options);
-  const current_user = JSON.parse(utils.getItemFromLocalStorage('current_user'));
+  const current_user = JSON.parse(Utils.getItemFromLocalStorage('current_user'));
 
   const handleOnShow = () => [setShow(true)];
   const handleOnHide = () => [setShow(false)];
@@ -55,7 +55,7 @@ function NavbarOffCanvas() {
   const handleLogout = () => {
     setIsLoggedIn(false);
     history.push("/login");
-    utils.logout();
+    Utils.logout();
   }
 
   useEffect(() => {
@@ -65,7 +65,7 @@ function NavbarOffCanvas() {
   const fetchAllUsers = async () => {
     if (isLoggedIn && shouldFetch.current) {
       shouldFetch.current = false;
-      const access_token = utils.getItemFromLocalStorage("access_token");
+      const access_token = Utils.getItemFromLocalStorage("access_token");
 
       const reqConfig = {
         headers: {
@@ -80,7 +80,7 @@ function NavbarOffCanvas() {
           if (resp && resp.data && resp.data.data) setUsers(resp.data.data);
         })
         .catch((error) => {
-          const errorOptions = utils.getErrorToastrOptions(error.response.data.error, error.response.data.message);
+          const errorOptions = Utils.getErrorToastrOptions(error.response.data.error, error.response.data.message);
           setToaster(errorOptions);
         });
     }

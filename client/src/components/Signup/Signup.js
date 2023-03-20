@@ -12,7 +12,7 @@ import { BsEye, BsEyeSlash } from "react-icons/bs";
 
 import Toastr from "../Toastr/Toastr";
 import config from "../../configurations/config";
-import utils from "../../shared/Utils";
+import Utils from "../../shared/Utils";
 
 import "../../App.css";
 
@@ -91,7 +91,7 @@ function Signup() {
   const [securityQ, setSecurityQ] = useState();
   const [securityA, setSecurityA] = useState();
 
-  let options = utils.getDefaultToastrOptions();
+  let options = Utils.getDefaultToastrOptions();
   const [toastr, setToaster] = useState(options);
   const handleOnHide = () => {
     setToaster(options);
@@ -112,7 +112,7 @@ function Signup() {
     event.preventDefault();
 
     if (!username || !password) {
-      const errorOptions = utils.getErrorToastrOptions("Error", "Username or Password can't be empty");
+      const errorOptions = Utils.getErrorToastrOptions("Error", "Username or Password can't be empty");
       setToaster(errorOptions);
     } else {
       const reqConfig = {
@@ -122,11 +122,11 @@ function Signup() {
       await axios
         .post(`${config.apiBaseUrl}/user/signup`, { username, password, securityQ, securityA }, reqConfig)
         .then((resp) => {
-          const successOptions = utils.getSuccessToastrOptions(resp.data.message);
+          const successOptions = Utils.getSuccessToastrOptions(resp.data.message);
           setToaster(successOptions);
         })
         .catch((error) => {
-          const errorOptions = utils.getErrorToastrOptions(error.response.data.error, error.response.data.message);
+          const errorOptions = Utils.getErrorToastrOptions(error.response.data.error, error.response.data.message);
           setToaster(errorOptions);
         });
     }
@@ -161,8 +161,8 @@ function Signup() {
               <Form.Text id="passwordResetHelp" muted>
                 (This will be used for password recovery)
               </Form.Text>
-              <Form.Select className="mb-2" aria-label="Security Question" onChange={(e) => setSecurityQ(e.target.value)}>
-                <option selected="true" disabled="true">Open this select menu</option>
+              <Form.Select className="mb-2" aria-label="Security Question" onChange={(e) => setSecurityQ(e.target.value)} defaultValue="Open this select menu">
+                <option disabled>Open this select menu</option>
                 {securityQs.map((ques, key) => {
                   return (
                     <option key={key} value={ques.value}>

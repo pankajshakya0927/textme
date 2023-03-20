@@ -10,7 +10,7 @@ import { FcSearch } from "react-icons/fc";
 
 import Toastr from "../Toastr/Toastr";
 import config from "../../configurations/config";
-import utils from "../../shared/Utils";
+import Utils from "../../shared/Utils";
 import { FriendsContext } from "../../context/FriendsContext";
 import "./AddFriends.css";
 
@@ -18,7 +18,7 @@ function AddFriends(props) {
   const { setUpdatedFriends } = useContext(FriendsContext);
   const [search, setSearch] = useState();
 
-  const options = utils.getDefaultToastrOptions();
+  const options = Utils.getDefaultToastrOptions();
   const [toastr, setToaster] = useState(options);
   const handleOnHide = () => {
     setToaster(options);
@@ -34,7 +34,7 @@ function AddFriends(props) {
   };
 
   const handleAddFriend = async (username) => {
-    const access_token = utils.getItemFromLocalStorage("access_token");
+    const access_token = Utils.getItemFromLocalStorage("access_token");
     const reqConfig = {
       headers: {
         "Content-type": "application/json",
@@ -51,7 +51,7 @@ function AddFriends(props) {
       .then((resp) => {
         if (resp && resp.data) {
           setUpdatedFriends(resp.data.data);
-          const successOptions = utils.getSuccessToastrOptions(resp.data.message);
+          const successOptions = Utils.getSuccessToastrOptions(resp.data.message);
           setToaster(successOptions);
         }
       })
