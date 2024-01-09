@@ -70,19 +70,16 @@ exports.update = (req, res, next) => {
 exports.fetchAllUsers = (req, res, next) => {
   const currentUser = req.currentUser;
   try {
-    UserModel.find({ username: { $ne: currentUser.username } },
-      (err, users) => {
-        let usernames = [];
+    UserModel.find({ username: { $ne: currentUser.username } })
+    .then((users) => {
+      let usernames = [];
         users.forEach((user) => {
           usernames.push(user.username);
         });
 
         utils.sendSuccessResponse(res, 200, "Users fetched successfully", usernames);
-      },
-      (err) => {
-        utils.sendErrorResponse(res, 400, "Error", "Failed to fetch usernames");
-      }
-    );
+    })
+    .catch((err) => utils.sendErrorResponse(res, 400, "Error", "Failed to fetch usernames"))
   } catch (error) {
     console.log(error);
   }

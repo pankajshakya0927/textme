@@ -27,15 +27,10 @@ exports.fetchChats = (req, res, next) => {
 
   const descSort = { _id: -1 }; // _id ObjectId in mongo stores timestamp
   try {
-    ChatModel.find(
-      { members: { $in: [username] } },
-      (err, chats) => {
-        utils.sendSuccessResponse(res, 200, "Chats fetched successfully", chats);
-      },
-      (err) => {
-        utils.sendErrorResponse(res, 400, "Error", "Failed to fetch chats");
-      }
-    ).sort(descSort);
+    ChatModel.find({ members: { $in: [username] } })
+    .then((chats) => utils.sendSuccessResponse(res, 200, "Chats fetched successfully", chats))
+    .catch((err) => utils.sendErrorResponse(res, 400, "Error", "Failed to fetch chats"))
+    //.sort(descSort);
   } catch (error) {
     console.log(error);
   }
