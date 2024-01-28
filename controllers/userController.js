@@ -21,13 +21,9 @@ exports.signup = (req, res, next) => {
           securityA: securityA,
         });
 
-        user.save((err, result) => {
-          if (err) {
-            utils.sendErrorResponse(res, 400, err.name, err.message);
-          } else {
-            utils.sendSuccessResponse(res, 201, "Account created successfully!", null);
-          }
-        });
+        user.save()
+        .then((result) => utils.sendSuccessResponse(res, 201, "Account created successfully!", null))
+        .catch((err) => utils.sendErrorResponse(res, 400, err.name, err.message));
       });
     }
   });

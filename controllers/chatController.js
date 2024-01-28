@@ -11,13 +11,9 @@ exports.createChat = (req, res, next) => {
         members: members,
       });
 
-      chat.save((err, result) => {
-        if (err) {
-          utils.sendErrorResponse(res, 400, err.name, err.message);
-        } else {
-          utils.sendSuccessResponse(res, 200, "Chat created successfully!", result);
-        }
-      });
+      chat.save()
+      .then((result) => utils.sendSuccessResponse(res, 200, "Chat created successfully!", null))
+      .catch((err) => utils.sendErrorResponse(res, 400, err.name, err.message));
     }
   });
 };
