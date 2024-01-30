@@ -11,13 +11,9 @@ exports.saveMessage = (messageReq, socket) => {
   });
 
   try {
-    chat.save((err, result) => {
-      if (err) {
-        console.log("Failed to save message!")
-      } else {
-        this.fetchMessages(messageReq, socket); // return all messages after saving the new message
-      }
-    });
+    chat.save()
+    .then((chats) => this.fetchMessages(messageReq, socket)) // return all messages after saving the new message
+    .catch((err) => console.log("Failed to save message!"))
   } catch (error) {
     console.log(error);
   }
@@ -28,14 +24,9 @@ exports.fetchMessages = (req, socket) => {
 
   const ascSort = { '_id': 1 }; // _id ObjectId in mongo stores timestamp
   try {
-    MessageModel.find({ chatId: chatId },
-      (err, messages) => {
-        socket.emit("fetchMessages", messages);
-      },
-      (err) => {
-        console.log("Failed to fetch Chats");
-      }
-    ).sort(ascSort);
+    MessageModel.find({ chatId: chatId })
+    .then((messages) => socket.emit("fetchMessages", messages))
+    .catch((err) => console.log("Failed to fetch Chats"))
   } catch (error) {
     console.log(error);
   }
