@@ -1,3 +1,3 @@
 module.exports = {
-  secret_key: "text-me-jwt-secret-key-created-august-2022",
+  secret_key: "textme-jwt-secret-key-created-august-2022",
 };
