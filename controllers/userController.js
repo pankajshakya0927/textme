@@ -5,6 +5,8 @@ const UserModel = require("../models/user");
 const utils = require("../utilities/utils");
 const config = require("../configuration/config");
 
+const JWT_SECRET = process.env.JWT_SECRET || config.JWT_SECRET;
+
 exports.signup = (req, res, next) => {
   const { firstName, lastName, username, password, securityQ, securityA } = req.body;
   UserModel.findOne({ username: username }).then((user) => {
@@ -37,7 +39,7 @@ exports.login = (req, res, next) => {
         if (result) {
           try {
             const obj = { username: username, userId: user._id };
-            const token = jwt.sign(obj, config.secret_key);
+            const token = jwt.sign(obj, JWT_SECRET);
             utils.sendSuccessResponse(res, 200, "Login successful!", {
               access_token: token,
               current_user: { firstName: user.firstName, lastName: user.lastName, username: user.username },
