@@ -1,3 +1,3 @@
 export default {
-    apiBaseUrl: "https://textme-uoy2.onrender.com/api"
+    apiBaseUrl: "https://textme.up.railway.app/api"
 }
