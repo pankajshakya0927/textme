@@ -1,5 +1,4 @@
 import React, { useState, useContext, useEffect, useRef } from "react";
-
 import Button from "react-bootstrap/Button";
 import Card from "react-bootstrap/Card";
 import Form from "react-bootstrap/Form";
@@ -25,56 +24,68 @@ export default function ChatBox(props) {
 
   const options = Utils.getDefaultToastrOptions();
   const [toastr, setToaster] = useState(options);
-  const handleOnHide = () => {
-    setToaster(options);
-  };
+
+  const handleOnHide = () => setToaster(options);
   const lastMessageRef = useRef(null);
-  let typingTimer;
-  let username = null;
-  const current_user = JSON.parse(Utils.getItemFromLocalStorage("current_user"));
-  if (current_user) username = current_user.username;
+  const typingTimerRef = useRef(null);
+
+  const currentUser = JSON.parse(Utils.getItemFromLocalStorage("current_user"));
+  const username = currentUser.username;
 
   const handleTyping = () => {
-    let typingData = {
-      text: `${username} is typing...`,
-      from: username,
-      to: props.chatWith
+    if (username) {
+      const typingData = {
+        text: `${username} is typing...`,
+        from: username,
+        to: props.chatWith
+      };
+      props.socket.emit('typing', typingData);
     }
-    props.socket.emit('typing', typingData);
-  }
+  };
 
   const handleSendMessage = (e) => {
     e.preventDefault();
-
-    if (isLoggedIn && message) {
+  
+    if (isLoggedIn && message && username) {
       const messageReq = {
         chatId: props.chatId,
         message: message,
         from: username,
         to: props.chatWith
       };
-
-      console.log(messageReq);
+  
+      // Optimistic UI update: add the new message to the chat immediately
+      props.setMessages(prevMessages => [
+        ...prevMessages,
+        { message, from: username, to: props.chatWith }
+      ]);
+  
+      // Emit the message to the server
       props.socket.emit("sendMessage", messageReq);
+  
       setMessage("");
     }
   };
 
   useEffect(() => {
-    // scroll to bottom every time messages change
     lastMessageRef.current.scrollIntoView({ behavior: "smooth" });
   }, [props.messages]);
 
   useEffect(() => {
-    props.socket.on('typingStatus', (typingData) => {
-      clearTimeout(typingTimer);
+    const handleTypingStatus = (typingData) => {
+      clearTimeout(typingTimerRef.current);
       setTypingStatus(typingData);
-      typingTimer = setTimeout(() => {
+      typingTimerRef.current = setTimeout(() => {
         setTypingStatus("");
       }, 1000);
-    });
-    lastMessageRef.current.scrollIntoView({ behavior: "smooth" });
-  }, [typingStatus]);
+    };
+
+    props.socket.on('typingStatus', handleTypingStatus);
+
+    return () => {
+      props.socket.off('typingStatus', handleTypingStatus);
+    };
+  }, [props.socket]);
 
   return (
     <>
@@ -102,15 +113,14 @@ export default function ChatBox(props) {
         <Card.Body className="overflow-auto chat-box">
           {props.messages.map((msg, key) => (
             <ListGroup key={key} className={msg.from === username ? "align-items-end mb-2" : "align-items-start mb-2"}>
-              <ListGroup.Item variant={msg.from === username ? "primary" : ""} key={key}>
+              <ListGroup.Item variant={msg.from === username ? "primary" : ""}>
                 {msg.message}
               </ListGroup.Item>
-              {/* <span>{new Date(msg.createdAt).toDateString()}</span> */}
             </ListGroup>
           ))}
-          {
-            props.chatWith === typingStatus.from && username === typingStatus.to ? <span className="typing">{typingStatus.text}</span> : <span></span>
-          }
+          {props.chatWith === typingStatus.from && username === typingStatus.to && (
+            <span className="typing">{typingStatus.text}</span>
+          )}
           <div ref={lastMessageRef}></div>
         </Card.Body>
         <Card.Footer>
@@ -122,8 +132,14 @@ export default function ChatBox(props) {
               <Button variant="outline-secondary">
                 <GrAttachment size={17} />
               </Button>
-              <Form.Control placeholder="Enter message..." aria-label="Enter message" value={message} onChange={(e) => setMessage(e.target.value)} onKeyDown={handleTyping} />
-              <Button type="Submit" variant="primary" id="send" onClick={(e) => handleSendMessage(e)}>
+              <Form.Control
+                placeholder="Enter message..."
+                aria-label="Enter message"
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                onKeyDown={handleTyping}
+              />
+              <Button type="submit" variant="primary" id="send" onClick={handleSendMessage}>
                 Send
               </Button>
             </InputGroup>
