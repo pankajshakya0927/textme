@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext, useRef } from "react";
+import React, { useState, useEffect, useContext, useRef, useCallback } from "react";
 import axios from "axios";
 import { useHistory } from "react-router-dom";
 import io from "socket.io-client";
@@ -16,7 +16,8 @@ import { AuthContext } from "../../context/AuthContext";
 import { FriendsContext } from "../../context/FriendsContext";
 import "./ChatTabs.css";
 
-const socket = io.connect("https://textme.up.railway.app/", { transports: ['websocket'] });
+// Establish socket connection within a useEffect to control its lifecycle
+const socket = io("https://textme.up.railway.app/", { transports: ["websocket"] });
 
 function ChatTabs() {
   const [friends, setFriends] = useState([]);
@@ -30,22 +31,20 @@ function ChatTabs() {
   const { isLoggedIn } = useContext(AuthContext);
   const [width, setWidth] = useState(window.innerWidth);
 
-  function handleWindowSizeChange() {
-    setWidth(window.innerWidth);
-  }
+  const history = useHistory();
+  const shouldFetch = useRef(true);
 
-  useEffect(() => {
-    window.addEventListener('resize', handleWindowSizeChange);
-    return () => {
-      window.removeEventListener('resize', handleWindowSizeChange);
-    }
-  }, [width]);
+  const options = Utils.getDefaultToastrOptions();
+  const [toastr, setToastr] = useState(options);
 
-  const isMobile = width <= 576;
-  let username = null;
+  const handleOnHide = () => {
+    setToastr(options);
+  };
+
+  // Fetch token and username once at the beginning
   const access_token = Utils.getItemFromLocalStorage("access_token");
   const current_user = JSON.parse(Utils.getItemFromLocalStorage("current_user"));
-  if (current_user) username = current_user.username;
+  const username = current_user.username;
 
   const reqConfig = {
     headers: {
@@ -54,123 +53,85 @@ function ChatTabs() {
     },
   };
 
-  const shouldFetch = useRef(true);
-  const history = useHistory();
+  // Handle window size changes
+  useEffect(() => {
+    const handleWindowSizeChange = () => setWidth(window.innerWidth);
+    window.addEventListener("resize", handleWindowSizeChange);
 
-  const options = Utils.getDefaultToastrOptions();
-  const [toastr, setToaster] = useState(options);
-  const handleOnHide = () => {
-    setToaster(options);
-  };
+    return () => window.removeEventListener("resize", handleWindowSizeChange);
+  }, []);
 
-  if (updatedFriends && updatedFriends !== friends) {
-    setFriends(updatedFriends);
-  }
+  const isMobile = width <= 576;
 
+  // Set socket authentication and event listeners
   useEffect(() => {
     socket.auth = { username };
+    socket.connect();
+
+    socket.on("fetchMessages", (messages) => {
+      setMessages(messages);
+    });
+
+    socket.on("newMessageReceived", (newMessage) => {
+      setNewMessage(newMessage);
+    });
+
+    return () => {
+      socket.disconnect(); // Clean up socket connection on component unmount
+    };
   }, [username]);
 
+  // Fetch chats and friends when the component mounts and user is logged in
   useEffect(() => {
     if (isLoggedIn && shouldFetch.current) {
       shouldFetch.current = false;
       fetchChats();
       fetchFriends();
     }
+  }, [isLoggedIn]);
 
-    socket.on("fetchMessages", (messages) => {
-      setMessages(messages);
-    })
-  }, []);
-
+  // Handle new messages being received
   useEffect(() => {
-    socket.on("newMessageReceived", (newMessage) => {
-      setNewMessage(newMessage);
-    })
-  }, [messages]);
-
-  useEffect(() => {
-    if (newMessage && newMessage.from === selectedChat) setMessages((prev) => [...prev, newMessage]);
-  }, [newMessage]);
-
-  const handleSelectFriend = async (friend, e) => {
-    e.preventDefault();
-
-    if (isLoggedIn) {
-      const chatReq = {
-        members: [friend, username],
-      };
-
-      await axios
-        .post(`${config.apiBaseUrl}/chat/createChat`, chatReq, reqConfig)
-        .then(
-          (resp) => {
-            if (resp && resp.data && resp.data.data) {
-              const chatRes = resp.data.data;
-              fetchChats();
-
-              const chatWith = chatRes.members.find((member) => member !== username);
-              setSelectedChat(chatWith);
-              setTab(1); // Clicking on friend should open the chat with them
-
-              const chat = {
-                chatId: chatRes._id,
-                chatWith
-              }
-              fetchMessages(chat);
-            }
-          },
-          (error) => {
-            const errorOptions = Utils.getErrorToastrOptions(error.response.data.error, error.response.data.message);
-            setToaster(errorOptions);
-          }
-        )
-        .catch((error) => {
-          console.error(error);
-        });
+    if (newMessage && newMessage.from === selectedChat) {
+      setMessages((prev) => [...prev, newMessage]);
     }
-  };
+  }, [newMessage, selectedChat]);
 
-  const fetchFriends = async () => {
-    await axios
-      .get(`${config.apiBaseUrl}/user/fetchFriends`, reqConfig)
-      .then((resp) => {
+  // Fetch friends list
+  const fetchFriends = useCallback(async () => {
+    try {
+      const resp = await axios.get(`${config.apiBaseUrl}/user/fetchFriends`, reqConfig);
+      if (resp && resp.data && resp.data.data) {
+        setFriends(resp.data.data);
+      }
+    } catch (error) {
+      const errorOptions = Utils.getErrorToastrOptions(error.response.data.error, error.response.data.message);
+      setToastr(errorOptions);
+      history.push("/login");
+      Utils.logout();
+    }
+  }, [reqConfig, history]);
+
+  // Fetch chat list
+  const fetchChats = useCallback(async () => {
+    if (isLoggedIn) {
+      try {
+        const resp = await axios.get(`${config.apiBaseUrl}/chat/fetchChats`, reqConfig);
         if (resp && resp.data && resp.data.data) {
-          setFriends(resp.data.data);
+          const chats = resp.data.data.map((chat) => ({
+            chatId: chat._id,
+            chatWith: chat.members.find((member) => member !== username),
+          }));
+          setChats(chats);
         }
-      })
-      .catch((error) => {
+      } catch (error) {
         const errorOptions = Utils.getErrorToastrOptions(error.response.data.error, error.response.data.message);
-        setToaster(errorOptions);
-        history.push("/login");
-        Utils.logout();
-      });
-  };
-
-  const fetchChats = async () => {
-    if (isLoggedIn) {
-      await axios
-        .get(`${config.apiBaseUrl}/chat/fetchChats`, reqConfig)
-        .then((resp) => {
-          if (resp && resp.data && resp.data.data) {
-            const chats = [];
-            resp.data.data.forEach((chat) => {
-              const chatWith = chat.members.find((member) => member !== username);
-              chats.push({
-                chatId: chat._id,
-                chatWith: chatWith,
-              });
-            });
-            setChats(chats);
-          }
-        })
-        .catch((error) => {
-          const errorOptions = Utils.getErrorToastrOptions(error.response.data.error, error.response.data.message);
-          setToaster(errorOptions);
-        });
+        setToastr(errorOptions);
+      }
     }
-  };
+  }, [isLoggedIn, reqConfig]);
 
+  // Fetch messages for a specific chat
   const fetchMessages = (chat) => {
     const chatId = chat.chatId;
     setChatId(chatId);
@@ -181,15 +142,51 @@ function ChatTabs() {
     }
   };
 
+  // Select a friend to chat with or create a new chat
+  const handleSelectFriend = async (friend, e) => {
+    e.preventDefault();
+
+    if (isLoggedIn) {
+      const chatReq = { members: [friend, username] };
+
+      try {
+        const resp = await axios.post(`${config.apiBaseUrl}/chat/createChat`, chatReq, reqConfig);
+        if (resp && resp.data && resp.data.data) {
+          const chatRes = resp.data.data;
+          fetchChats();
+
+          const chatWith = chatRes.members.find((member) => member !== username);
+          setSelectedChat(chatWith);
+          setTab(1); // Clicking on friend should open the chat with them
+
+          const chat = { chatId: chatRes._id, chatWith };
+          fetchMessages(chat);
+        }
+      } catch (error) {
+        const errorOptions = Utils.getErrorToastrOptions(error.response.data.error, error.response.data.message);
+        setToastr(errorOptions);
+      }
+    }
+  };
+
+  // Select a chat to open
   const handleSelectChat = (chat, e) => {
     e.preventDefault();
     fetchMessages(chat);
   };
 
+  // Set the active tab
   const handleSetTab = (tab, e) => {
     e.preventDefault();
     setTab(tab);
   };
+
+  // Update friends list if context value changes
+  useEffect(() => {
+    if (updatedFriends && updatedFriends !== friends) {
+      setFriends(updatedFriends);
+    }
+  }, [updatedFriends, friends]);
 
   return (
     <>
@@ -197,14 +194,14 @@ function ChatTabs() {
       <Tab.Container id="list-group-tabs">
         <Row className={friends && friends.length ? "tabs g-1" : "hide"}>
           {isMobile}
-          <Col sm={4} style={{ display: isMobile && selectedChat ? 'none' : 'block' }}>
+          <Col sm={4} style={{ display: isMobile && selectedChat ? "none" : "block" }}>
             <ListGroup>
               <ListGroup.Item>
                 <ListGroup horizontal>
-                  <ListGroup.Item className={tab === 1 ? 'selected' : ''} action onClick={(e) => handleSetTab(1, e)}>
+                  <ListGroup.Item className={tab === 1 ? "selected" : ""} action onClick={(e) => handleSetTab(1, e)}>
                     Chats
                   </ListGroup.Item>
-                  <ListGroup.Item className={tab === 2 ? 'selected' : ''} action onClick={(e) => handleSetTab(2, e)}>
+                  <ListGroup.Item className={tab === 2 ? "selected" : ""} action onClick={(e) => handleSetTab(2, e)}>
                     Friends
                   </ListGroup.Item>
                 </ListGroup>
@@ -231,7 +228,7 @@ function ChatTabs() {
               )}
             </ListGroup>
           </Col>
-          <Col sm={8} style={{ display: isMobile && !selectedChat ? 'none' : 'block' }}>
+          <Col sm={8} style={{ display: isMobile && !selectedChat ? "none" : "block" }}>
             {!selectedChat ? (
               <h5 className="align-center">
                 Choose a chat to start the conversation &nbsp;
