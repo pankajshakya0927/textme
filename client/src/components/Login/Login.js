@@ -16,8 +16,6 @@ import "../../App.css";
 const apiBaseUrl = process.env.REACT_APP_API_BASE_URL;
 
 function Login() {
-  console.log('React API Base URL:', process.env.REACT_APP_API_BASE_URL);
-  console.log('Railway Public Domain:', process.env.RAILWAY_PUBLIC_DOMAIN);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
