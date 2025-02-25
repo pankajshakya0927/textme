@@ -1,8 +1,7 @@
 const mongoose = require("mongoose");
-const connectionUrl = "mongodb://127.0.0.1:27017/textme";
 
 mongoose
-  .connect(process.env.MONGODB_URI || connectionUrl, {
+  .connect(process.env.MONGODB_URI, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   })

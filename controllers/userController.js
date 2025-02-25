@@ -5,7 +5,7 @@ const UserModel = require("../models/user");
 const utils = require("../utilities/utils");
 const config = require("../configuration/config");
 
-const JWT_SECRET = process.env.JWT_SECRET || config.JWT_SECRET;
+const JWT_SECRET = process.env.JWT_SECRET;
 
 exports.signup = (req, res, next) => {
   const { firstName, lastName, username, password, securityQ, securityA } = req.body;
