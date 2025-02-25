@@ -10,8 +10,9 @@ import AddFriends from "../AddFriends/AddFriends";
 import { AuthContext } from "../../context/AuthContext";
 import Toastr from "../Toastr/Toastr";
 import Utils from "../../shared/Utils";
-import config from "../../configurations/config";
 import "./Navbar.css"; // Add a CSS file for additional styles if needed
+
+const apiBaseUrl = process.env.REACT_APP_API_BASE_URL;
 
 function NavbarOffCanvas() {
   const [show, setShow] = useState(false);
@@ -63,7 +64,7 @@ function NavbarOffCanvas() {
         },
       };
 
-      const response = await axios.get(`${config.apiBaseUrl}/user/fetchAllUsers`, reqConfig);
+      const response = await axios.get(`${apiBaseUrl}/user/fetchAllUsers`, reqConfig);
       if (response?.data?.data) {
         setUsers(response.data.data);
       }

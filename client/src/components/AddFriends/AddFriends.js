@@ -9,10 +9,11 @@ import InputGroup from "react-bootstrap/InputGroup";
 import { FcSearch } from "react-icons/fc";
 
 import Toastr from "../Toastr/Toastr";
-import config from "../../configurations/config";
 import Utils from "../../shared/Utils";
 import { FriendsContext } from "../../context/FriendsContext";
 import "./AddFriends.css";
+
+const apiBaseUrl = process.env.REACT_APP_API_BASE_URL;
 
 function AddFriends(props) {
   const { setUpdatedFriends } = useContext(FriendsContext);
@@ -47,7 +48,7 @@ function AddFriends(props) {
     };
 
     await axios
-      .post(`${config.apiBaseUrl}/user/addFriend`, addUser, reqConfig)
+      .post(`${apiBaseUrl}/user/addFriend`, addUser, reqConfig)
       .then((resp) => {
         if (resp && resp.data) {
           setUpdatedFriends(resp.data.data);

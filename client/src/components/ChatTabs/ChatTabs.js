@@ -11,10 +11,11 @@ import Tab from "react-bootstrap/Tab";
 import ChatBox from "../ChatBox/ChatBox";
 import Toastr from "../Toastr/Toastr";
 import Utils from "../../shared/Utils";
-import config from "../../configurations/config";
 import { AuthContext } from "../../context/AuthContext";
 import { FriendsContext } from "../../context/FriendsContext";
 import "./ChatTabs.css";
+
+const apiBaseUrl = process.env.REACT_APP_API_BASE_URL;
 
 // Establish socket connection within a useEffect to control its lifecycle
 const socket = io(process.env.REACT_APP_SOCKET_URL, { transports: ["websocket"] });
@@ -85,7 +86,7 @@ function ChatTabs() {
   // Fetch friends list
   const fetchFriends = useCallback(async () => {
     try {
-      const resp = await axios.get(`${config.apiBaseUrl}/user/fetchFriends`, reqConfig);
+      const resp = await axios.get(`${apiBaseUrl}/user/fetchFriends`, reqConfig);
       if (resp && resp.data && resp.data.data) {
         setFriends(resp.data.data);
       }
@@ -101,7 +102,7 @@ function ChatTabs() {
   const fetchChats = useCallback(async () => {
     if (isLoggedIn) {
       try {
-        const resp = await axios.get(`${config.apiBaseUrl}/chat/fetchChats`, reqConfig);
+        const resp = await axios.get(`${apiBaseUrl}/chat/fetchChats`, reqConfig);
         if (resp && resp.data && resp.data.data) {
           const chats = resp.data.data.map((chat) => ({
             chatId: chat._id,
@@ -151,7 +152,7 @@ function ChatTabs() {
       const chatReq = { members: [friend, username] };
 
       try {
-        const resp = await axios.post(`${config.apiBaseUrl}/chat/createChat`, chatReq, reqConfig);
+        const resp = await axios.post(`${apiBaseUrl}/chat/createChat`, chatReq, reqConfig);
         if (resp && resp.data && resp.data.data) {
           const chatRes = resp.data.data;
           fetchChats();

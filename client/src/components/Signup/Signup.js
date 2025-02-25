@@ -10,10 +10,10 @@ import InputGroup from "react-bootstrap/InputGroup";
 import { BsEye, BsEyeSlash } from "react-icons/bs";
 
 import Toastr from "../Toastr/Toastr";
-import config from "../../configurations/config";
 import Utils from "../../shared/Utils";
-
 import "../../App.css";
+
+const apiBaseUrl = process.env.REACT_APP_API_BASE_URL;
 
 function Signup() {
   const securityQs = [
@@ -63,7 +63,7 @@ function Signup() {
 
     try {
       const reqConfig = { "Content-type": "application/json" };
-      const response = await axios.post(`${config.apiBaseUrl}/user/signup`, {
+      const response = await axios.post(`${apiBaseUrl}/user/signup`, {
         username: username.trim(),
         password,
         securityQ,

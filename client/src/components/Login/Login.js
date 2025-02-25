@@ -9,10 +9,11 @@ import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
 
 import { AuthContext } from "../../context/AuthContext";
-import config from "../../configurations/config";
 import Toastr from "../Toastr/Toastr";
 import Utils from "../../shared/Utils";
 import "../../App.css";
+
+const apiBaseUrl = process.env.REACT_APP_API_BASE_URL;
 
 function Login() {
   const [username, setUsername] = useState("");
@@ -39,7 +40,7 @@ function Login() {
 
     try {
       const reqConfig = { headers: { "Content-type": "application/json" } };
-      const response = await axios.post(`${config.apiBaseUrl}/user/login`, {
+      const response = await axios.post(`${apiBaseUrl}/user/login`, {
         username: username.trim(),
         password: password.trim()
       }, reqConfig);
