@@ -30,7 +30,7 @@ export default function ChatBox(props) {
   const typingTimerRef = useRef(null);
 
   const currentUser = JSON.parse(Utils.getItemFromLocalStorage("current_user"));
-  const username = currentUser.username;
+  const username = currentUser?.username;
 
   const handleTyping = () => {
     if (username) {
@@ -39,51 +39,55 @@ export default function ChatBox(props) {
         from: username,
         to: props.chatWith
       };
-      props.socket.emit('typing', typingData);
+      props.socket.emit("typing", typingData);
     }
   };
 
   const handleSendMessage = (e) => {
     e.preventDefault();
-  
-    if (isLoggedIn && message && username) {
+
+    if (isLoggedIn && message.trim() && username) {  // Ensure message isn't empty
       const messageReq = {
         chatId: props.chatId,
-        message: message,
+        message: message.trim(),
         from: username,
         to: props.chatWith
       };
-  
-      // Optimistic UI update: add the new message to the chat immediately
+
+      // Optimistic UI update
       props.setMessages(prevMessages => [
         ...prevMessages,
-        { message, from: username, to: props.chatWith }
+        { message: message.trim(), from: username, to: props.chatWith }
       ]);
-  
+
       // Emit the message to the server
       props.socket.emit("sendMessage", messageReq);
-  
+
       setMessage("");
     }
   };
 
   useEffect(() => {
-    lastMessageRef.current.scrollIntoView({ behavior: "smooth" });
+    if (lastMessageRef.current) {
+      lastMessageRef.current.scrollIntoView({ behavior: "smooth" });
+    }
   }, [props.messages]);
 
   useEffect(() => {
     const handleTypingStatus = (typingData) => {
       clearTimeout(typingTimerRef.current);
       setTypingStatus(typingData);
+
       typingTimerRef.current = setTimeout(() => {
         setTypingStatus("");
       }, 1000);
     };
 
-    props.socket.on('typingStatus', handleTypingStatus);
+    props.socket.on("typingStatus", handleTypingStatus);
 
     return () => {
-      props.socket.off('typingStatus', handleTypingStatus);
+      props.socket.off("typingStatus", handleTypingStatus);
+      clearTimeout(typingTimerRef.current);
     };
   }, [props.socket]);
 
@@ -118,7 +122,8 @@ export default function ChatBox(props) {
               </ListGroup.Item>
             </ListGroup>
           ))}
-          {props.chatWith === typingStatus.from && username === typingStatus.to && (
+          {/* Fix Typing Indicator Condition */}
+          {typingStatus?.text && props.chatWith === typingStatus.from && username === typingStatus.to && (
             <span className="typing">{typingStatus.text}</span>
           )}
           <div ref={lastMessageRef}></div>

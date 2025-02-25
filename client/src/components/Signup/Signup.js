@@ -1,5 +1,4 @@
-import React from "react";
-import { useState } from "react";
+import React, { useState } from "react";
 import axios from "axios";
 
 import Button from "react-bootstrap/Button";
@@ -18,167 +17,110 @@ import "../../App.css";
 
 function Signup() {
   const securityQs = [
-    {
-      value: 1,
-      label: "What was your childhood nickname?",
-    },
-    {
-      value: 2,
-      label: "In what city did you meet your spouse/significant other?",
-    },
-    {
-      value: 3,
-      label: "What is the name of your favorite childhood friend?",
-    },
-    {
-      value: 4,
-      label: "What was the last name of your favorite childhood teacher?",
-    },
-    {
-      value: 5,
-      label: "What is the name of your youngest child?",
-    },
-    {
-      value: 6,
-      label: "What is your sibling’s birthday month and year?",
-    },
-    {
-      value: 7,
-      label: "What school did you attend for sixth grade?",
-    },
-    {
-      value: 8,
-      label: "What was the name of your first stuffed animal?",
-    },
-    {
-      value: 9,
-      label: "In what city or town did your mother and father meet?",
-    },
-    {
-      value: 10,
-      label: "What was your childhood phone number including area code?",
-    },
-    {
-      value: 11,
-      label: "Where were you when you had your first kiss?",
-    },
-    {
-      value: 12,
-      label: "What is the name of the place your wedding reception was held?",
-    },
-    {
-      value: 13,
-      label: "What time of the day were you born?",
-    },
-    {
-      value: 14,
-      label: "What are the last 4 digits of your credit/debit card?",
-    },
-    {
-      value: 15,
-      label: "What is your grandmother's first name?",
-    },
-    {
-      value: 16,
-      label: "What year did you graduate from High School?",
-    },
+    { value: 1, label: "What was your childhood nickname?" },
+    { value: 2, label: "In what city did you meet your spouse/significant other?" },
+    { value: 3, label: "What is the name of your favorite childhood friend?" },
+    { value: 4, label: "What was the last name of your favorite childhood teacher?" },
+    { value: 5, label: "What is the name of your youngest child?" },
+    { value: 6, label: "What is your sibling’s birthday month and year?" },
+    { value: 7, label: "What school did you attend for sixth grade?" },
+    { value: 8, label: "What was the name of your first stuffed animal?" },
+    { value: 9, label: "In what city or town did your mother and father meet?" },
+    { value: 10, label: "What was your childhood phone number including area code?" },
   ];
 
   const [passwordType, setPasswordType] = useState("password");
-  const [passwordInput, setPasswordInput] = useState("");
-  const [username, setUsername] = useState();
-  const [password, setPassword] = useState();
-  const [securityQ, setSecurityQ] = useState();
-  const [securityA, setSecurityA] = useState();
+  const [password, setPassword] = useState("");
+  const [username, setUsername] = useState("");
+  const [securityQ, setSecurityQ] = useState("");
+  const [securityA, setSecurityA] = useState("");
 
   let options = Utils.getDefaultToastrOptions();
   const [toastr, setToaster] = useState(options);
-  const handleOnHide = () => {
-    setToaster(options);
-  };
 
-  const handlePasswordChange = (event) => {
-    setPasswordInput(event.target.value);
-    setPassword(event.target.value);
-  };
+  const handleOnHide = () => setToaster(options);
 
   const togglePasswordType = () => {
-    if (passwordType === "password") {
-      setPasswordType("text");
-    } else setPasswordType("password");
+    setPasswordType(passwordType === "password" ? "text" : "password");
   };
 
   const signupHandler = async (event) => {
     event.preventDefault();
 
-    if (!username || !password) {
-      const errorOptions = Utils.getErrorToastrOptions("Error", "Username or Password can't be empty");
-      setToaster(errorOptions);
-    } else {
-      const reqConfig = {
-        "Content-type": "application/json",
-      };
+    // Validation Checks
+    if (!username.trim() || !password.trim()) {
+      return setToaster(Utils.getErrorToastrOptions("Error", "Username and Password cannot be empty"));
+    }
+    // if (password.length < 6) {
+    //   return setToaster(Utils.getErrorToastrOptions("Error", "Password must be at least 6 characters long"));
+    // }
+    // if (!securityQ) {
+    //   return setToaster(Utils.getErrorToastrOptions("Error", "Please select a security question"));
+    // }
+    // if (!securityA.trim()) {
+    //   return setToaster(Utils.getErrorToastrOptions("Error", "Security answer cannot be empty"));
+    // }
 
-      await axios
-        .post(`${config.apiBaseUrl}/user/signup`, { username, password, securityQ, securityA }, reqConfig)
-        .then((resp) => {
-          const successOptions = Utils.getSuccessToastrOptions(resp.data.message);
-          setToaster(successOptions);
-        })
-        .catch((error) => {
-          const errorOptions = Utils.getErrorToastrOptions(error.response.data.error, error.response.data.message);
-          setToaster(errorOptions);
-        });
+    try {
+      const reqConfig = { "Content-type": "application/json" };
+      const response = await axios.post(`${config.apiBaseUrl}/user/signup`, {
+        username: username.trim(),
+        password,
+        securityQ,
+        securityA: securityA.trim()
+      }, reqConfig);
+
+      setToaster(Utils.getSuccessToastrOptions(response.data.message));
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || "Signup failed. Please try again.";
+      setToaster(Utils.getErrorToastrOptions("Error", errorMessage));
     }
   };
 
   return (
-    <Container>
+    <Container className="mt-5">
       <Toastr show={toastr.show} onHide={handleOnHide} variant={toastr.variant} title={toastr.title} message={toastr.message} />
-      <Row>
-        <Col className="container d-inline-flex align-items-center justify-content-center">
-          <Form>
+      <Row className="justify-content-center">
+        <Col md={6}>
+          <Form onSubmit={signupHandler}>
+            {/* Username */}
             <Form.Group className="mb-3" controlId="username">
               <Form.Label>Username</Form.Label>
               <Form.Control type="text" placeholder="Enter Username" onChange={(e) => setUsername(e.target.value)} />
-              <Form.Text id="usernameHelp" muted>
-                Username should be unique
-              </Form.Text>
+              <Form.Text muted>Username should be unique.</Form.Text>
             </Form.Group>
 
+            {/* Password */}
             <Form.Group className="mb-3" controlId="password">
               <Form.Label>Password</Form.Label>
               <InputGroup>
-                <Form.Control type={passwordType} onChange={handlePasswordChange} value={passwordInput} placeholder="Password" />
-                <Button variant="outline-secondary" id="search" onClick={togglePasswordType}>
+                <Form.Control type={passwordType} placeholder="Enter Password" value={password} onChange={(e) => setPassword(e.target.value)} />
+                <Button variant="outline-secondary" onClick={togglePasswordType}>
                   {passwordType === "password" ? <BsEyeSlash /> : <BsEye />}
                 </Button>
               </InputGroup>
+              <Form.Text muted>Password must be at least 6 characters long.</Form.Text>
             </Form.Group>
 
-            <Form.Group className="mb-1" controlId="securityQ">
-              <Form.Label style={{ paddingRight: "2px" }}>Select a security question</Form.Label>
-              <Form.Text id="passwordResetHelp" muted>
-                (This will be used for password recovery)
-              </Form.Text>
-              <Form.Select className="mb-2" aria-label="Security Question" onChange={(e) => setSecurityQ(e.target.value)} defaultValue="Open this select menu">
-                <option disabled>Open this select menu</option>
-                {securityQs.map((ques, key) => {
-                  return (
-                    <option key={key} value={ques.value}>
-                      {ques.label}
-                    </option>
-                  );
-                })}
+            {/* Security Question */}
+            <Form.Group className="mb-3" controlId="securityQ">
+              <Form.Label>Select a Security Question</Form.Label>
+              <Form.Select onChange={(e) => setSecurityQ(e.target.value)} defaultValue="">
+                <option value="" disabled>Select a question...</option>
+                {securityQs.map((ques, key) => (
+                  <option key={key} value={ques.value}>{ques.label}</option>
+                ))}
               </Form.Select>
             </Form.Group>
 
+            {/* Security Answer */}
             <Form.Group className="mb-3" controlId="securityA">
-              <Form.Control type="text" placeholder="Answer" onChange={(e) => setSecurityA(e.target.value)} />
+              <Form.Control type="text" placeholder="Enter your answer" onChange={(e) => setSecurityA(e.target.value)} />
             </Form.Group>
 
-            <Button variant="primary" type="Submit" onClick={signupHandler}>
-              Signup
+            {/* Submit Button */}
+            <Button variant="primary" type="submit" className="w-100">
+              Sign Up
             </Button>
           </Form>
         </Col>

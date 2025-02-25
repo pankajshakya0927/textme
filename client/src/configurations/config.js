@@ -1,3 +1,5 @@
-export default {
-    apiBaseUrl: "https://textme.up.railway.app/api"
+const config = {
+    apiBaseUrl: "http://localhost:3001/api"
 }
+
+export default config;

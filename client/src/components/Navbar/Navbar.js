@@ -2,71 +2,60 @@ import React, { useState, useEffect, useContext, useRef } from "react";
 import axios from "axios";
 import { useHistory } from "react-router-dom";
 
-import Button from "react-bootstrap/Button";
-import Container from "react-bootstrap/Container";
-import Nav from "react-bootstrap/Nav";
-import Navbar from "react-bootstrap/Navbar";
-import NavDropdown from "react-bootstrap/NavDropdown";
-import Offcanvas from "react-bootstrap/Offcanvas";
-import ButtonGroup from "react-bootstrap/ButtonGroup";
+import { Navbar, Container, Nav, Offcanvas, Button, NavDropdown, ButtonGroup } from "react-bootstrap";
 import { HiUserAdd } from "react-icons/hi";
 import { MdNotifications } from "react-icons/md";
-import { AiOutlineClose } from "react-icons/ai";
 
 import AddFriends from "../AddFriends/AddFriends";
 import { AuthContext } from "../../context/AuthContext";
 import Toastr from "../Toastr/Toastr";
 import Utils from "../../shared/Utils";
 import config from "../../configurations/config";
+import "./Navbar.css"; // Add a CSS file for additional styles if needed
 
 function NavbarOffCanvas() {
   const [show, setShow] = useState(false);
   const [users, setUsers] = useState([]);
-  const history = useHistory();
+  const [navExpanded, setNavExpanded] = useState(false);
   const { isLoggedIn, setIsLoggedIn } = useContext(AuthContext);
-  const shouldFetch = useRef(true); // useEffect runs twice thereby calling the api twice, this will avoid that
+  const shouldFetch = useRef(true);
+  const history = useHistory();
 
-  let options = Utils.getDefaultToastrOptions();
-  const [toastr, setToaster] = useState(options);
-  const current_user = JSON.parse(Utils.getItemFromLocalStorage('current_user'));
+  const toastrOptions = Utils.getDefaultToastrOptions();
+  const [toastr, setToaster] = useState(toastrOptions);
+  const currentUser = JSON.parse(Utils.getItemFromLocalStorage("current_user"));
 
-  const handleOnShow = () => [setShow(true)];
-  const handleOnHide = () => [setShow(false)];
+  // Toggle Add Friends modal
+  const handleShowAddFriends = () => setShow(true);
+  const handleHideAddFriends = () => setShow(false);
 
-  const handleOnHideToastr = () => {
-    setToaster(options);
+  // Close Navbar when navigating
+  const closeNavBar = () => setNavExpanded(false);
+
+  // Navigate to pages
+  const navigateTo = (path) => {
+    history.push(path);
+    closeNavBar();
   };
 
-  const [navExpanded, setNavExpanded] = useState(false);
-  const closeNavBar = () => {
-    setNavExpanded(false);
-  }
-
-  const handleLogin = () => {
-    history.push("/login");
-    closeNavBar();
-  }
-
-  const handleSignup = () => {
-    history.push("/signup");
-    closeNavBar();
-  }
-
+  // Logout function
   const handleLogout = () => {
     setIsLoggedIn(false);
-    history.push("/login");
     Utils.logout();
-  }
+    navigateTo("/login");
+  };
 
+  // Fetch all users when logged in
   useEffect(() => {
-    fetchAllUsers();
+    if (isLoggedIn && shouldFetch.current) {
+      shouldFetch.current = false;
+      fetchAllUsers();
+    }
   }, [isLoggedIn]);
 
   const fetchAllUsers = async () => {
-    if (isLoggedIn && shouldFetch.current) {
-      shouldFetch.current = false;
+    try {
       const access_token = Utils.getItemFromLocalStorage("access_token");
-
       const reqConfig = {
         headers: {
           "Content-type": "application/json",
@@ -74,73 +63,77 @@ function NavbarOffCanvas() {
         },
       };
 
-      await axios
-        .get(`${config.apiBaseUrl}/user/fetchAllUsers`, reqConfig)
-        .then((resp) => {
-          if (resp && resp.data && resp.data.data) setUsers(resp.data.data);
-        })
-        .catch((error) => {
-          const errorOptions = Utils.getErrorToastrOptions(error.response.data.error, error.response.data.message);
-          setToaster(errorOptions);
-        });
+      const response = await axios.get(`${config.apiBaseUrl}/user/fetchAllUsers`, reqConfig);
+      if (response?.data?.data) {
+        setUsers(response.data.data);
+      }
+    } catch (error) {
+      const errorOptions = Utils.getErrorToastrOptions(error.response?.data?.error, error.response?.data?.message);
+      setToaster(errorOptions);
     }
-  }
-
-  const navigateTo = (path) => {
-    history.push(path);
-    closeNavBar();
-  }
+  };
 
   return (
     <>
-      <AddFriends show={show} users={users.length ? users : []} onHide={handleOnHide}></AddFriends>
-      <Toastr show={toastr.show} onHide={handleOnHideToastr} variant={toastr.variant} title={toastr.title} message={toastr.message} />
+      {/* Add Friends Modal */}
+      <AddFriends show={show} users={users} onHide={handleHideAddFriends} />
 
-      {["md"].map((expand) => (
-        <Navbar sticky="top" bg="primary" variant="dark" key={expand} expand={expand} expanded={navExpanded}>
-          <Container fluid>
-            <Navbar.Brand href="#">TextMe</Navbar.Brand>
-            {isLoggedIn ? (
-              <div>
-                <ButtonGroup aria-label="Controls" style={{ marginRight: "10px" }}>
-                  <Button variant="primary" onClick={handleOnShow}>
-                    <HiUserAdd size={28} />
-                  </Button>
-                  <Button variant="primary">
-                    <MdNotifications size={28} />
-                  </Button>
-                </ButtonGroup>
-              </div>
-            ) : null}
-            <Navbar.Toggle aria-controls={`offcanvasNavbar-expand-${expand}`} onClick={() => setNavExpanded(navExpanded ? false : "expanded")}/>
-            <Navbar.Offcanvas id={`offcanvasNavbar-expand-${expand}`} aria-labelledby={`offcanvasNavbarLabel-expand-${expand}`} placement="end">
-              <Offcanvas.Header>
-              <Offcanvas.Title id={`offcanvasNavbarLabel-expand-${expand}`}>TextMe</Offcanvas.Title>
-              <AiOutlineClose className="pointer" size={28} onClick={closeNavBar} />
-              </Offcanvas.Header>
-              <Offcanvas.Body>
-                <Nav className="justify-content-end flex-grow-1 pe-3">
-                  <Nav.Link onClick={() => navigateTo('/')}>Home</Nav.Link>
-                  {/* <Nav.Link>Contact Us</Nav.Link> */}
-                  {isLoggedIn ? (
-                    <NavDropdown title={current_user.username} align="end" id={`offcanvasNavbarDropdown-expand-${expand}`}>
-                      {/* <NavDropdown.Item>Update Profile</NavDropdown.Item>
-                      <NavDropdown.Item>Account Settings</NavDropdown.Item> */}
-                      {/* <NavDropdown.Divider /> */}
-                      <NavDropdown.Item onClick={handleLogout}>Logout</NavDropdown.Item>
-                    </NavDropdown>
-                  ) : (
-                    <>
-                      <Button variant="primary" onClick={handleLogin}>Log in</Button>
-                      <Button variant="light" onClick={handleSignup}>Sign up</Button>
-                    </>
-                  )}
-                </Nav>
-              </Offcanvas.Body>
-            </Navbar.Offcanvas>
-          </Container>
-        </Navbar>
-      ))}
+      {/* Toastr Notifications */}
+      <Toastr show={toastr.show} onHide={() => setToaster(toastrOptions)} variant={toastr.variant} title={toastr.title} message={toastr.message} />
+
+      <Navbar bg="primary" variant="dark" expand="md" sticky="top" expanded={navExpanded}>
+        <Container fluid>
+          {/* Brand Name */}
+          <Navbar.Brand onClick={() => navigateTo("/")} className="pointer">
+            TextMe
+          </Navbar.Brand>
+
+          {/* Right-side controls */}
+          {isLoggedIn && (
+            <ButtonGroup className="d-flex align-items-center gap-2">
+              <Button variant="primary" onClick={handleShowAddFriends}>
+                <HiUserAdd size={24} />
+              </Button>
+              <Button variant="primary">
+                <MdNotifications size={24} />
+              </Button>
+            </ButtonGroup>
+          )}
+
+          {/* Navbar Toggle Button */}
+          <Navbar.Toggle aria-controls="offcanvasNavbar" onClick={() => setNavExpanded((prev) => !prev)} />
+
+          {/* Offcanvas Sidebar */}
+          <Navbar.Offcanvas id="offcanvasNavbar" placement="end">
+            <Offcanvas.Header closeButton>
+              <Offcanvas.Title>TextMe</Offcanvas.Title>
+            </Offcanvas.Header>
+            <Offcanvas.Body>
+              <Nav className="justify-content-end flex-grow-1 pe-3">
+                <Nav.Link onClick={() => navigateTo("/")}>Home</Nav.Link>
+
+                {isLoggedIn ? (
+                  <NavDropdown title={currentUser.username} align="end">
+                    <NavDropdown.Item onClick={() => navigateTo("/profile")}>Profile</NavDropdown.Item>
+                    <NavDropdown.Item onClick={() => navigateTo("/settings")}>Settings</NavDropdown.Item>
+                    <NavDropdown.Divider />
+                    <NavDropdown.Item onClick={handleLogout}>Logout</NavDropdown.Item>
+                  </NavDropdown>
+                ) : (
+                  <div>
+                    <Button variant="primary" onClick={() => navigateTo("/login")}>
+                      Log in
+                    </Button>
+                    <Button variant="outline-light" onClick={() => navigateTo("/signup")}>
+                      Sign up
+                    </Button>
+                  </div>
+                )}
+              </Nav>
+            </Offcanvas.Body>
+          </Navbar.Offcanvas>
+        </Container>
+      </Navbar>
     </>
   );
 }

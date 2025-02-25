@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext, useRef, useCallback } from "react";
+import React, { useState, useEffect, useContext, useRef, useCallback, useMemo } from "react";
 import axios from "axios";
 import { useHistory } from "react-router-dom";
 import io from "socket.io-client";
@@ -17,7 +17,7 @@ import { FriendsContext } from "../../context/FriendsContext";
 import "./ChatTabs.css";
 
 // Establish socket connection within a useEffect to control its lifecycle
-const socket = io("https://textme.up.railway.app/", { transports: ["websocket"] });
+const socket = io(process.env.REACT_APP_SOCKET_URL, { transports: ["websocket"] });
 
 function ChatTabs() {
   const [friends, setFriends] = useState([]);
@@ -46,12 +46,13 @@ function ChatTabs() {
   const current_user = JSON.parse(Utils.getItemFromLocalStorage("current_user"));
   const username = current_user.username;
 
-  const reqConfig = {
+  // Memoize the reqConfig to avoid unnecessary re-renders
+  const reqConfig = useMemo(() => ({
     headers: {
       "Content-type": "application/json",
       Authorization: `Bearer ${access_token}`,
     },
-  };
+  }), [access_token]);
 
   // Handle window size changes
   useEffect(() => {
@@ -80,22 +81,6 @@ function ChatTabs() {
       socket.disconnect(); // Clean up socket connection on component unmount
     };
   }, [username]);
-
-  // Fetch chats and friends when the component mounts and user is logged in
-  useEffect(() => {
-    if (isLoggedIn && shouldFetch.current) {
-      shouldFetch.current = false;
-      fetchChats();
-      fetchFriends();
-    }
-  }, [isLoggedIn]);
-
-  // Handle new messages being received
-  useEffect(() => {
-    if (newMessage && newMessage.from === selectedChat) {
-      setMessages((prev) => [...prev, newMessage]);
-    }
-  }, [newMessage, selectedChat]);
 
   // Fetch friends list
   const fetchFriends = useCallback(async () => {
@@ -129,7 +114,23 @@ function ChatTabs() {
         setToastr(errorOptions);
       }
     }
-  }, [isLoggedIn, reqConfig]);
+  }, [isLoggedIn, reqConfig, username]);
+
+  // Fetch chats and friends when the component mounts and user is logged in
+  useEffect(() => {
+    if (isLoggedIn && shouldFetch.current) {
+      shouldFetch.current = false;
+      fetchChats();
+      fetchFriends();
+    }
+  }, [isLoggedIn, fetchChats, fetchFriends]);
+
+  // Handle new messages being received
+  useEffect(() => {
+    if (newMessage && newMessage.from === selectedChat) {
+      setMessages((prev) => [...prev, newMessage]);
+    }
+  }, [newMessage, selectedChat]);
 
   // Fetch messages for a specific chat
   const fetchMessages = (chat) => {
@@ -230,10 +231,9 @@ function ChatTabs() {
           </Col>
           <Col sm={8} style={{ display: isMobile && !selectedChat ? "none" : "block" }}>
             {!selectedChat ? (
-              <h5 className="align-center">
-                Choose a chat to start the conversation &nbsp;
-                <span className="emoji monkey" role="img" aria-label="monkey"></span>
-              </h5>
+              <div className="text-center mt-3">
+                <p>No chats yet. Start a conversation!</p>
+              </div>
             ) : null}
             <Tab.Content>
               <Tab.Pane eventKey={selectedChat}>
@@ -245,22 +245,20 @@ function ChatTabs() {
 
         <div className={friends && friends.length ? "hide" : "container"}>
           {isLoggedIn ? (
-            <h5>
-              Hi there!{" "}
-              <span role="img" aria-label="wave" className="wave">
-                👋
-              </span>{" "}
-              Welcome to TextMe!!! <br /><br />
-              Add your first friend to get the fun started.
-            </h5>
+            <div className="text-center mt-5">
+              <h4>Welcome to TextMe!
+                <span role="img" aria-label="wave" className="wave">
+                  👋
+                </span>
+              </h4>
+              <p>Add a friend to start chatting.</p>
+            </div>
           ) : (
-            <h5>
-              Hi there!{" "}
+            <h4>Welcome to TextMe!
               <span role="img" aria-label="wave" className="wave">
                 👋
-              </span>{" "}
-              Welcome to TextMe!!!
-            </h5>
+              </span>
+            </h4>
           )}
         </div>
       </Tab.Container>

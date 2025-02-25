@@ -1,4 +1,4 @@
-export default {
+const Utils = {
   setItemToLocalStorage: (key, value) => {
     localStorage.setItem(key, value);
   },
@@ -41,3 +41,5 @@ export default {
     localStorage.clear();
   }
 };
+
+export default Utils;

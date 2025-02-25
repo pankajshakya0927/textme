@@ -1,9 +1,8 @@
-import React, { useContext } from "react";
-import Button from "react-bootstrap/Button";
-import { useState } from "react";
+import React, { useContext, useState } from "react";
 import { useHistory } from "react-router-dom";
 import axios from "axios";
 
+import Button from "react-bootstrap/Button";
 import Form from "react-bootstrap/Form";
 import Container from "react-bootstrap/Container";
 import Row from "react-bootstrap/Row";
@@ -16,67 +15,81 @@ import Utils from "../../shared/Utils";
 import "../../App.css";
 
 function Login() {
-  const [username, setUsername] = useState();
-  const [password, setPassword] = useState();
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+
   const { setIsLoggedIn } = useContext(AuthContext);
 
   let options = Utils.getDefaultToastrOptions();
   const [toastr, setToaster] = useState(options);
-
-  const handleOnHide = () => {
-    setToaster(options);
-  };
-
   const history = useHistory();
+
+  const handleOnHide = () => setToaster(options);
 
   const loginHandler = async (event) => {
     event.preventDefault();
+    setLoading(true);
 
-    if (!username || !password) {
-      const errorOptions = Utils.getErrorToastrOptions("Error", "Username or Password can't be empty");
-      setToaster(errorOptions);
-    } else {
-      const reqConfig = {
-        headers: {
-          "Content-type": "application/json"
-        },
-      };
+    // Validation
+    if (!username.trim() || !password.trim()) {
+      setLoading(false);
+      return setToaster(Utils.getErrorToastrOptions("Error", "Username and Password cannot be empty"));
+    }
 
-      await axios
-        .post(`${config.apiBaseUrl}/user/login`, { username, password }, reqConfig)
-        .then((resp) => {
-          if (resp.data.data) {
-            Utils.setItemToLocalStorage("access_token", resp.data.data.access_token);
-            Utils.setItemToLocalStorage("current_user", JSON.stringify(resp.data.data.current_user));
-            Utils.setItemToLocalStorage("isLoggedIn", true);
-            setIsLoggedIn(true);
-            history.push("/chats");
-          }
-        })
-        .catch((error) => {
-          const errorOptions = Utils.getErrorToastrOptions(error.response.data.error, error.response.data.message);
-          setToaster(errorOptions);
-        });
+    try {
+      const reqConfig = { headers: { "Content-type": "application/json" } };
+      const response = await axios.post(`${config.apiBaseUrl}/user/login`, {
+        username: username.trim(),
+        password: password.trim()
+      }, reqConfig);
+
+      if (response.data.data) {
+        Utils.setItemToLocalStorage("access_token", response.data.data.access_token);
+        Utils.setItemToLocalStorage("current_user", JSON.stringify(response.data.data.current_user));
+        Utils.setItemToLocalStorage("isLoggedIn", true);
+        setIsLoggedIn(true);
+        history.push("/chats");
+      }
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || "Login failed. Please try again.";
+      setToaster(Utils.getErrorToastrOptions("Error", errorMessage));
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <Container>
+    <Container className="mt-5">
       <Toastr show={toastr.show} onHide={handleOnHide} variant={toastr.variant} title={toastr.title} message={toastr.message} />
-      <Row>
-        <Col className="container d-inline-flex align-items-center justify-content-center">
-          <Form style={{ width: "20em" }}>
+      <Row className="justify-content-center">
+        <Col md={5}>
+          <Form onSubmit={loginHandler}>
+            {/* Username */}
             <Form.Group className="mb-3" controlId="username">
               <Form.Label>Username</Form.Label>
-              <Form.Control type="text" placeholder="Enter username" onChange={(e) => setUsername(e.target.value)} />
+              <Form.Control
+                type="text"
+                placeholder="Enter username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+              />
             </Form.Group>
 
+            {/* Password */}
             <Form.Group className="mb-3" controlId="password">
               <Form.Label>Password</Form.Label>
-              <Form.Control type="password" placeholder="Password" onChange={(e) => setPassword(e.target.value)} />
+              <Form.Control
+                type="password"
+                placeholder="Enter password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
             </Form.Group>
-            <Button variant="primary" type="Submit" onClick={loginHandler}>
-              Login
+
+            {/* Login Button */}
+            <Button variant="primary" type="submit" className="w-100" disabled={loading}>
+              {loading ? "Logging in..." : "Login"}
             </Button>
           </Form>
         </Col>

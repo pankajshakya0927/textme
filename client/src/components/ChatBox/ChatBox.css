@@ -6,7 +6,8 @@
     overflow-wrap: anywhere;
 }
 
-.chat-box {
+.list-group-item {
+    max-width: 100%;
     padding-bottom: 2px !important;
 }
 
