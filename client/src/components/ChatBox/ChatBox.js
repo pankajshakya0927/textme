@@ -97,11 +97,17 @@ export default function ChatBox(props) {
 
       <Card className="box">
         <Card.Header className="d-flex align-items-center justify-content-between">
-          <div className="flex">
+          <div className="d-flex align-items-center gap-2">
             <Button className="back-btn" variant="light" onClick={() => props.setSelectedChat(null)}>
               <IoMdArrowRoundBack size={30} />
             </Button>
-            <h4 className="word-wrap">{props.chatWith}</h4>
+
+            <h4 className="word-wrap mb-0">{props.chatWith}</h4>
+
+            {/* Typing Indicator (only show when active) */}
+            {typingStatus?.text && props.chatWith === typingStatus.from && username === typingStatus.to && (
+              <span className="typing-text">typing...</span>
+            )}
           </div>
           <div>
             <ButtonGroup aria-label="Call">
@@ -114,18 +120,29 @@ export default function ChatBox(props) {
             </ButtonGroup>
           </div>
         </Card.Header>
-        <Card.Body className="overflow-auto chat-box">
-          {props.messages.map((msg, key) => (
-            <ListGroup key={key} className={msg.from === username ? "align-items-end mb-2" : "align-items-start mb-2"}>
-              <ListGroup.Item variant={msg.from === username ? "primary" : ""}>
-                {msg.message}
-              </ListGroup.Item>
-            </ListGroup>
-          ))}
-          {/* Fix Typing Indicator Condition */}
-          {typingStatus?.text && props.chatWith === typingStatus.from && username === typingStatus.to && (
-            <span className="typing">{typingStatus.text}</span>
-          )}
+        <Card.Body className="overflow-auto chat-box d-flex flex-column">
+          <div className="flex-grow-1">
+            {props.messages.map((msg, key) => (
+              <ListGroup key={key} className={msg.from === username ? "align-items-end mb-2" : "align-items-start mb-2"}>
+                <ListGroup.Item variant={msg.from === username ? "primary" : "light"}>
+                  {msg.message}
+                </ListGroup.Item>
+              </ListGroup>
+            ))}
+
+            {/* Typing Indicator as a message bubble */}
+            {/* {typingStatus?.text && props.chatWith === typingStatus.from && username === typingStatus.to && (
+              <ListGroup className="align-items-start mb-2">
+                <ListGroup.Item variant="light" className="typing-message">
+                  <span className="typing-indicator">
+                    <span className="dot"></span>
+                    <span className="dot"></span>
+                    <span className="dot"></span>
+                  </span>
+                </ListGroup.Item>
+              </ListGroup>
+            )} */}
+          </div>
           <div ref={lastMessageRef}></div>
         </Card.Body>
         <Card.Footer>
