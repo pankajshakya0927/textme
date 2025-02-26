@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useState, useEffect } from "react";
 import axios from "axios";
 
 import Button from "react-bootstrap/Button";
@@ -10,17 +10,29 @@ import { FcSearch } from "react-icons/fc";
 
 import Toastr from "../Toastr/Toastr";
 import Utils from "../../shared/Utils";
+
+import { UsersContext } from "../../context/UsersContext";
 import { FriendsContext } from "../../context/FriendsContext";
+
 import "./AddFriends.css";
 
 const apiBaseUrl = process.env.REACT_APP_API_BASE_URL;
 
 function AddFriends(props) {
-  const { setUpdatedFriends } = useContext(FriendsContext);
-  const [search, setSearch] = useState();
+  const { users, fetchAllUsers } = useContext(UsersContext); // Access users and fetchAllUsers from UsersContext
+  const { setUpdatedFriends } = useContext(FriendsContext); // Access FriendsContext to update friends
+
+  const [search, setSearch] = useState("");
 
   const options = Utils.getDefaultToastrOptions();
   const [toastr, setToaster] = useState(options);
+
+  useEffect(() => {
+    if (props.show) {
+      fetchAllUsers(); // Fetch users when the modal is shown
+    }
+  }, [props.show, fetchAllUsers]); // Re-run when the modal opens
+
   const handleOnHide = () => {
     setToaster(options);
   };
@@ -43,27 +55,41 @@ function AddFriends(props) {
       },
     };
 
-    const addUser = {
-      username: username,
-    };
+    const addUser = { username };
 
-    await axios
-      .post(`${apiBaseUrl}/user/addFriend`, addUser, reqConfig)
-      .then((resp) => {
-        if (resp && resp.data) {
-          setUpdatedFriends(resp.data.data);
-          const successOptions = Utils.getSuccessToastrOptions(resp.data.message);
-          setToaster(successOptions);
-        }
-      })
-      .catch((error) => {
-        console.log(error);
-      });
+    try {
+      const response = await axios.post(
+        `${apiBaseUrl}/user/addFriend`,
+        addUser,
+        reqConfig
+      );
+
+      if (response?.data?.data) {
+        // Update FriendsContext with the new friend data
+        setUpdatedFriends(response.data.data);
+
+        // Fetch the updated list of users from the server
+        fetchAllUsers();
+
+        // Show success toastr
+        const successOptions = Utils.getSuccessToastrOptions(response.data.message);
+        setToaster(successOptions);
+      }
+    } catch (error) {
+      console.error("Error adding friend:", error);
+      // You can show an error toastr if necessary
+    }
   };
 
   return (
     <>
-      <Toastr show={toastr.show} onHide={handleOnHide} variant={toastr.variant} title={toastr.title} message={toastr.message} />
+      <Toastr
+        show={toastr.show}
+        onHide={handleOnHide}
+        variant={toastr.variant}
+        title={toastr.title}
+        message={toastr.message}
+      />
       <Modal show={props.show} onHide={handleClose}>
         <Modal.Header closeButton>
           <Modal.Title>Add Friends</Modal.Title>
@@ -72,14 +98,22 @@ function AddFriends(props) {
           <ListGroup className={search ? "add-friend" : ""}>
             <ListGroup.Item>
               <InputGroup className="search">
-                <Form.Control type="text" placeholder="Search username..." aria-label="Search username" onChange={(e) => setSearch(e.target.value)} />
+                <Form.Control
+                  type="text"
+                  placeholder="Search username..."
+                  aria-label="Search username"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                />
                 <Button variant="outline-secondary" id="search" onClick={handleSearch}>
                   <FcSearch />
                 </Button>
               </InputGroup>
             </ListGroup.Item>
-            {props.users
-              .filter((usernames) => search && usernames.includes(search))
+
+            {/* Filter users based on search */}
+            {users
+              .filter((usernames) => search && usernames.toLowerCase().includes(search.toLowerCase())) // Case-insensitive search
               .map((user, key) => (
                 <ListGroup.Item key={key} className="users-list">
                   <span>{user}</span>

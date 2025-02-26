@@ -1,25 +1,24 @@
-import React, { useState, useEffect, useContext, useRef } from "react";
-import axios from "axios";
+import React, { useState, useContext } from "react";
 import { useHistory } from "react-router-dom";
 
-import { Navbar, Container, Nav, Offcanvas, Button, NavDropdown, ButtonGroup } from "react-bootstrap";
+import { Navbar, Container, Nav, Offcanvas, Button, NavDropdown, ButtonGroup, Badge } from "react-bootstrap";
 import { HiUserAdd } from "react-icons/hi";
 import { MdNotifications } from "react-icons/md";
 
 import AddFriends from "../AddFriends/AddFriends";
+
 import { AuthContext } from "../../context/AuthContext";
+
 import Toastr from "../Toastr/Toastr";
 import Utils from "../../shared/Utils";
 import "./Navbar.css"; // Add a CSS file for additional styles if needed
 
-const apiBaseUrl = process.env.REACT_APP_API_BASE_URL;
-
 function NavbarOffCanvas() {
   const [show, setShow] = useState(false);
-  const [users, setUsers] = useState([]);
   const [navExpanded, setNavExpanded] = useState(false);
+
   const { isLoggedIn, setIsLoggedIn } = useContext(AuthContext);
-  const shouldFetch = useRef(true);
+
   const history = useHistory();
 
   const toastrOptions = Utils.getDefaultToastrOptions();
@@ -46,38 +45,10 @@ function NavbarOffCanvas() {
     navigateTo("/login");
   };
 
-  // Fetch all users when logged in
-  useEffect(() => {
-    if (isLoggedIn && shouldFetch.current) {
-      shouldFetch.current = false;
-      fetchAllUsers();
-    }
-  }, [isLoggedIn]);
-
-  const fetchAllUsers = async () => {
-    try {
-      const access_token = Utils.getItemFromLocalStorage("access_token");
-      const reqConfig = {
-        headers: {
-          "Content-type": "application/json",
-          Authorization: `Bearer ${access_token}`,
-        },
-      };
-
-      const response = await axios.get(`${apiBaseUrl}/user/fetchAllUsers`, reqConfig);
-      if (response?.data?.data) {
-        setUsers(response.data.data);
-      }
-    } catch (error) {
-      const errorOptions = Utils.getErrorToastrOptions(error.response?.data?.error, error.response?.data?.message);
-      setToaster(errorOptions);
-    }
-  };
-
   return (
     <>
       {/* Add Friends Modal */}
-      <AddFriends show={show} users={users} onHide={handleHideAddFriends} />
+      <AddFriends show={show} onHide={handleHideAddFriends} />
 
       {/* Toastr Notifications */}
       <Toastr show={toastr.show} onHide={() => setToaster(toastrOptions)} variant={toastr.variant} title={toastr.title} message={toastr.message} />
@@ -95,7 +66,8 @@ function NavbarOffCanvas() {
               <Button variant="primary" onClick={handleShowAddFriends}>
                 <HiUserAdd size={24} />
               </Button>
-              <Button variant="primary">
+
+              <Button variant="primary" className="position-relative">
                 <MdNotifications size={24} />
               </Button>
             </ButtonGroup>
@@ -105,7 +77,7 @@ function NavbarOffCanvas() {
           <Navbar.Toggle aria-controls="offcanvasNavbar" onClick={() => setNavExpanded((prev) => !prev)} />
 
           {/* Offcanvas Sidebar */}
-          <Navbar.Offcanvas id="offcanvasNavbar" placement="end">
+          <Navbar.Offcanvas id="offcanvasNavbar" placement="end" show={navExpanded} onHide={() => setNavExpanded(false)}>
             <Offcanvas.Header closeButton>
               <Offcanvas.Title>TextMe</Offcanvas.Title>
             </Offcanvas.Header>

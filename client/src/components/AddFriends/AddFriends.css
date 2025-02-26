@@ -4,6 +4,7 @@
 }
 
 .add-friend {
+    max-height: calc(100vh - 293px);
     overflow-y: auto;
-    height: calc(100vh - 293px) !important;
+    display: block;
 }
