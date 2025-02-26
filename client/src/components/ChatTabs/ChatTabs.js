@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext, useRef, useCallback, useMemo } from "react";
 import axios from "axios";
 import { useHistory } from "react-router-dom";
-import io from "socket.io-client";
+import socket from "../../utils/socket";
 
 import ListGroup from "react-bootstrap/ListGroup";
 import Col from "react-bootstrap/Col";
@@ -16,9 +16,6 @@ import { FriendsContext } from "../../context/FriendsContext";
 import "./ChatTabs.css";
 
 const apiBaseUrl = process.env.REACT_APP_API_BASE_URL;
-
-// Establish socket connection within a useEffect to control its lifecycle
-const socket = io(process.env.REACT_APP_SOCKET_URL, { transports: ["websocket"] });
 
 function ChatTabs() {
   const [friends, setFriends] = useState([]);
@@ -238,7 +235,14 @@ function ChatTabs() {
             ) : null}
             <Tab.Content>
               <Tab.Pane eventKey={selectedChat}>
-                <ChatBox chatId={chatId} chatWith={selectedChat} setSelectedChat={setSelectedChat} messages={messages} setMessages={setMessages} socket={socket} />
+                <ChatBox 
+                  chatId={chatId} 
+                  chatWith={selectedChat} 
+                  setSelectedChat={setSelectedChat} 
+                  messages={messages} 
+                  setMessages={setMessages} 
+                  socket={socket} 
+                />
               </Tab.Pane>
             </Tab.Content>
           </Col>
