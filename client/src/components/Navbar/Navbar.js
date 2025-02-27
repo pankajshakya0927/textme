@@ -1,29 +1,31 @@
 import React, { useState, useContext } from "react";
 import { useHistory } from "react-router-dom";
-
-import { Navbar, Container, Nav, Offcanvas, Button, NavDropdown, ButtonGroup, Badge } from "react-bootstrap";
+import { Navbar, Container, Nav, Offcanvas, Button, NavDropdown, ButtonGroup, Badge, Dropdown, ListGroup } from "react-bootstrap";
 import { HiUserAdd } from "react-icons/hi";
 import { MdNotifications } from "react-icons/md";
 
-import AddFriends from "../AddFriends/AddFriends";
-
 import { AuthContext } from "../../context/AuthContext";
+import { NotificationsContext } from "../../context/NotificationsContext";
 
+import AddFriends from "../AddFriends/AddFriends";
 import Toastr from "../Toastr/Toastr";
 import Utils from "../../shared/Utils";
-import "./Navbar.css"; // Add a CSS file for additional styles if needed
+import "./Navbar.css";
 
 function NavbarOffCanvas() {
   const [show, setShow] = useState(false);
   const [navExpanded, setNavExpanded] = useState(false);
+  const [showNotificationsDropdown, setShowNotificationsDropdown] = useState(false);
 
   const { isLoggedIn, setIsLoggedIn } = useContext(AuthContext);
+  const { getNotificationsForUser } = useContext(NotificationsContext);
 
   const history = useHistory();
-
   const toastrOptions = Utils.getDefaultToastrOptions();
   const [toastr, setToaster] = useState(toastrOptions);
+
   const currentUser = JSON.parse(Utils.getItemFromLocalStorage("current_user"));
+  const userNotifications = currentUser ? getNotificationsForUser(currentUser.username) : [];
 
   // Toggle Add Friends modal
   const handleShowAddFriends = () => setShow(true);
@@ -55,26 +57,62 @@ function NavbarOffCanvas() {
 
       <Navbar bg="primary" variant="dark" expand="md" sticky="top" expanded={navExpanded}>
         <Container fluid>
-          {/* Brand Name */}
-          <Navbar.Brand onClick={() => navigateTo("/")} className="pointer">
-            TextMe
-          </Navbar.Brand>
+          <div className="d-flex align-items-center gap-3">
+            {/* Brand Name */}
+            <Navbar.Brand onClick={() => navigateTo("/")} className="pointer">
+              TextMe
+            </Navbar.Brand>
 
-          {/* Right-side controls */}
-          {isLoggedIn && (
-            <ButtonGroup className="d-flex align-items-center gap-2">
-              <Button variant="primary" onClick={handleShowAddFriends}>
-                <HiUserAdd size={24} />
-              </Button>
+            {/* Right-side controls */}
+            {isLoggedIn && (
+              <ButtonGroup className="d-flex align-items-center">
+                <Button variant="primary" onClick={handleShowAddFriends}>
+                  <HiUserAdd size={24} />
+                </Button>
 
-              <Button variant="primary" className="position-relative">
-                <MdNotifications size={24} />
-              </Button>
-            </ButtonGroup>
-          )}
+                {/* Notifications Dropdown */}
+                <Dropdown show={showNotificationsDropdown} onToggle={(isOpen) => setShowNotificationsDropdown(isOpen)}>
+                  <Dropdown.Toggle as={Button} variant="primary" className="position-relative">
+                    <MdNotifications size={24} />
+                    {userNotifications.length > 0 && (
+                      <Badge bg="danger" pill className="position-absolute" style={{ top: 5, right: 5 }}>
+                        {userNotifications.length}
+                      </Badge>
+                    )}
+                  </Dropdown.Toggle>
 
-          {/* Navbar Toggle Button */}
-          <Navbar.Toggle aria-controls="offcanvasNavbar" onClick={() => setNavExpanded((prev) => !prev)} />
+                  <Dropdown.Menu
+                    align="start"  // Align dropdown towards the right
+                    style={{ minWidth: "300px" }}
+                    container="body"  // Ensures dropdown is placed correctly
+                    popperConfig={{
+                      modifiers: [
+                        { name: "preventOverflow", options: { boundary: "window" } }, // Prevents clipping
+                        { name: "flip", options: { fallbackPlacements: ["bottom-start", "bottom-end"] } } // Adjusts position dynamically
+                      ]
+                    }}>
+                    <Dropdown.Header>Notifications</Dropdown.Header>
+
+                    {userNotifications.length === 0 ? (
+                      <Dropdown.Item disabled>No new notifications</Dropdown.Item>
+                    ) : (
+                      <ListGroup variant="flush">
+                        {userNotifications.map((notification, index) => (
+                          <ListGroup.Item key={index}>{notification.message}</ListGroup.Item>
+                        ))}
+                      </ListGroup>
+                    )}
+
+                    {userNotifications.length > 0 && <Dropdown.Divider />}
+                    <Dropdown.Item onClick={() => setShowNotificationsDropdown(false)}>Mark All as Read</Dropdown.Item>
+                  </Dropdown.Menu>
+                </Dropdown>
+              </ButtonGroup>
+            )}
+          </div>
+
+          {/* Navbar Toggle Button on the Right */}
+          <Navbar.Toggle aria-controls="offcanvasNavbar" className="ms-auto" onClick={() => setNavExpanded((prev) => !prev)} />
 
           {/* Offcanvas Sidebar */}
           <Navbar.Offcanvas id="offcanvasNavbar" placement="end" show={navExpanded} onHide={() => setNavExpanded(false)}>
@@ -106,7 +144,7 @@ function NavbarOffCanvas() {
             </Offcanvas.Body>
           </Navbar.Offcanvas>
         </Container>
-      </Navbar>
+      </Navbar >
     </>
   );
 }

@@ -7,6 +7,7 @@ import ListGroup from "react-bootstrap/ListGroup";
 import Col from "react-bootstrap/Col";
 import Row from "react-bootstrap/Row";
 import Tab from "react-bootstrap/Tab";
+import { FaUser } from 'react-icons/fa';
 
 import ChatBox from "../ChatBox/ChatBox";
 import Toastr from "../Toastr/Toastr";
@@ -208,8 +209,10 @@ function ChatTabs() {
               {tab === 1 && (
                 <div className="chats-tab">
                   {chats.map((chat, key) => (
-                    <ListGroup.Item key={key} action href={chat.chatWith} onClick={(e) => handleSelectChat(chat, e)}>
-                      <img className="rounded-circle" alt="profile" src={require("../../assets/images/profile.png")} width="50px" data-holder-rendered="true" />
+                    <ListGroup.Item key={key} action href={chat.chatWith} onClick={(e) => handleSelectChat(chat, e)} style={{ display: 'flex', alignItems: 'center' }}>
+                      <div className="rounded-circle" style={{ width: '50px', height: '50px', backgroundColor: '#f0f0f0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <FaUser size={30} />
+                      </div>
                       <span className="mg-l10 word-wrap">{chat.chatWith}</span>
                     </ListGroup.Item>
                   ))}
@@ -218,8 +221,10 @@ function ChatTabs() {
               {tab === 2 && (
                 <div className="friends-tab">
                   {friends.map((friend, key) => (
-                    <ListGroup.Item key={key} action href={friend} onClick={(e) => handleSelectFriend(friend, e)}>
-                      <img className="rounded-circle" alt="profile" src={require("../../assets/images/profile.png")} width="50px" data-holder-rendered="true" />
+                    <ListGroup.Item key={key} action href={friend} onClick={(e) => handleSelectFriend(friend, e)} style={{ display: 'flex', alignItems: 'center' }}>
+                      <div className="rounded-circle" style={{ width: '50px', height: '50px', backgroundColor: '#f0f0f0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <FaUser size={30} />
+                      </div>
                       <span className="mg-l10 word-wrap">{friend}</span>
                     </ListGroup.Item>
                   ))}
@@ -235,13 +240,13 @@ function ChatTabs() {
             ) : null}
             <Tab.Content>
               <Tab.Pane eventKey={selectedChat}>
-                <ChatBox 
-                  chatId={chatId} 
-                  chatWith={selectedChat} 
-                  setSelectedChat={setSelectedChat} 
-                  messages={messages} 
-                  setMessages={setMessages} 
-                  socket={socket} 
+                <ChatBox
+                  chatId={chatId}
+                  chatWith={selectedChat}
+                  setSelectedChat={setSelectedChat}
+                  messages={messages}
+                  setMessages={setMessages}
+                  socket={socket}
                 />
               </Tab.Pane>
             </Tab.Content>

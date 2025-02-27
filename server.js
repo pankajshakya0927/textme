@@ -3,6 +3,7 @@ const debug = require("debug")("debugger");
 const http = require("http");
 const socketio = require("socket.io");
 const messageController = require("./controllers/messageController");
+const notificationController = require("./controllers/notificationController");
 
 const normalizePort = (val) => {
   var port = parseInt(val, 10);
@@ -84,6 +85,24 @@ io.on("connection", (socket) => {
     messageController.fetchMessages(messageReq, socket);
   });
 
+  // Handle notifications
+  socket.on("sendNotification", (notification) => {
+    try {
+      // Save notification to the database
+      notificationController.saveNotification(notification, socket);
+
+      // Find the receiver in the connected users
+      const receiver = connectedUsers.find(user => user.username === notification.receiver);
+      if (receiver) {
+        // Emit notification to the receiver
+        io.to(receiver.socketId).emit("receiveNotification", notification);
+      }
+    } catch (error) {
+      console.error("Error sending notification:", error);
+    }
+  });
+
+  // Handle disconnect
   socket.on("disconnect", () => {
     // update connectedUsers as soon as a user is disconnected
     connectedUsers = connectedUsers.filter(user => user.socketId !== socket.id);

@@ -11,6 +11,7 @@ const helmet = require("helmet");
 
 const userRoute = require("./routes/user");
 const chatRoute = require("./routes/chat");
+const notificationRoute = require("./routes/notification");
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
@@ -26,6 +27,7 @@ app.use((req, res, next) => {
 app.get('/api', (req, res) => res.send('TextMe API Working successfully ✅'))
 app.use("/api/user", userRoute);
 app.use("/api/chat", chatRoute);
+app.use("/api/notifications", notificationRoute);
 
 // serve the static files
 if (process.env.NODE_ENV === "production") {

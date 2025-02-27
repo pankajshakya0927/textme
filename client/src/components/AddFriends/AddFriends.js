@@ -13,6 +13,7 @@ import Utils from "../../shared/Utils";
 
 import { UsersContext } from "../../context/UsersContext";
 import { FriendsContext } from "../../context/FriendsContext";
+import { NotificationsContext } from "../../context/NotificationsContext";
 
 import "./AddFriends.css";
 
@@ -21,11 +22,14 @@ const apiBaseUrl = process.env.REACT_APP_API_BASE_URL;
 function AddFriends(props) {
   const { users, fetchAllUsers } = useContext(UsersContext); // Access users and fetchAllUsers from UsersContext
   const { setUpdatedFriends } = useContext(FriendsContext); // Access FriendsContext to update friends
+  const { addNotification } = useContext(NotificationsContext); // Access NotificationsContext to add new notifications
 
   const [search, setSearch] = useState("");
 
   const options = Utils.getDefaultToastrOptions();
   const [toastr, setToaster] = useState(options);
+
+  const currentUser = JSON.parse(Utils.getItemFromLocalStorage("current_user"));
 
   useEffect(() => {
     if (props.show) {
@@ -70,6 +74,18 @@ function AddFriends(props) {
 
         // Fetch the updated list of users from the server
         fetchAllUsers();
+
+        // Add notification for the target user (the friend being added)
+        const notification = {
+          message: `${currentUser.username} added you as a friend.`,
+          type: 'friend-request',
+          sender: currentUser.username,
+          receiver: addUser.username, // This should be the user being added
+          timestamp: new Date().toISOString(),
+        };
+
+        // Send notification to the right user
+        addNotification(notification);
 
         // Show success toastr
         const successOptions = Utils.getSuccessToastrOptions(response.data.message);
