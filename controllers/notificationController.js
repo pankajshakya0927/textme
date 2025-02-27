@@ -1,4 +1,4 @@
-const NotificationModel = require("../models/Notification");
+const NotificationModel = require("../models/notification");
 const utils = require("../utilities/utils");
 
 exports.saveNotification = (req, res, next) => {
