@@ -18,7 +18,7 @@ function NavbarOffCanvas() {
   const [showNotificationsDropdown, setShowNotificationsDropdown] = useState(false);
 
   const { isLoggedIn, setIsLoggedIn } = useContext(AuthContext);
-  const { getNotificationsForUser } = useContext(NotificationsContext);
+  const { getNotificationsForUser, markNotificationAsRead } = useContext(NotificationsContext);
 
   const history = useHistory();
   const toastrOptions = Utils.getDefaultToastrOptions();
@@ -74,9 +74,9 @@ function NavbarOffCanvas() {
                 <Dropdown show={showNotificationsDropdown} onToggle={(isOpen) => setShowNotificationsDropdown(isOpen)}>
                   <Dropdown.Toggle as={Button} variant="primary" className="position-relative">
                     <MdNotifications size={24} />
-                    {userNotifications.length > 0 && (
+                    {userNotifications.filter(notification => !notification.isRead).length > 0 && (
                       <Badge bg="danger" pill className="position-absolute" style={{ top: 5, right: 5 }}>
-                        {userNotifications.length}
+                        {userNotifications.filter(notification => !notification.isRead).length}
                       </Badge>
                     )}
                   </Dropdown.Toggle>
@@ -96,15 +96,47 @@ function NavbarOffCanvas() {
                     {userNotifications.length === 0 ? (
                       <Dropdown.Item disabled>No new notifications</Dropdown.Item>
                     ) : (
-                      <ListGroup variant="flush">
-                        {userNotifications.map((notification, index) => (
-                          <ListGroup.Item key={index}>{notification.message}</ListGroup.Item>
-                        ))}
+                      <ListGroup
+                        variant="flush"
+                        style={{
+                          maxHeight: "300px",  // Set a max height for the list
+                          overflowY: "auto",   // Enable vertical scrolling
+                        }}
+                      >
+                        {userNotifications.length > 0 ? (
+                          userNotifications.map((notification, index) => (
+                            <ListGroup.Item
+                              key={index}
+                              action
+                              onClick={() => {
+                                // Only mark as read if the notification is unread
+                                if (!notification.isRead) {
+                                  markNotificationAsRead(notification._id);
+                                }
+                              }}
+                              style={{
+                                cursor: "pointer",
+                                backgroundColor: notification.isRead ? "#f8f9fa" : "#0d6efd", // Gray for read, Primary blue for unread
+                                color: notification.isRead ? "black" : "white", // Black text for read, White for unread
+                              }}
+                            >
+                              {notification.message}
+                              <small
+                                style={{
+                                  fontSize: "0.7rem",
+                                  display: "block",
+                                  textAlign: "right",
+                                }}
+                              >
+                                {Utils.timeAgo(notification.createdAt)}
+                              </small>
+                            </ListGroup.Item>
+                          ))
+                        ) : (
+                          <Dropdown.Item disabled>No new notifications</Dropdown.Item>
+                        )}
                       </ListGroup>
                     )}
-
-                    {userNotifications.length > 0 && <Dropdown.Divider />}
-                    <Dropdown.Item onClick={() => setShowNotificationsDropdown(false)}>Mark All as Read</Dropdown.Item>
                   </Dropdown.Menu>
                 </Dropdown>
               </ButtonGroup>

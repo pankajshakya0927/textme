@@ -1,8 +1,11 @@
 import React, { createContext, useState, useEffect, useContext } from "react";
+import axios from "axios";
+
+import { AuthContext } from "./AuthContext";
+
 import socket from "../utils/socket";  // Make sure socket.io-client is correctly initialized here
 import Utils from "../shared/Utils";
-import axios from "axios";
-import { AuthContext } from "./AuthContext";  // Import AuthContext
+import apiClient from "../utils/api";
 
 export const NotificationsContext = createContext();
 
@@ -78,9 +81,25 @@ export const NotificationsContextProvider = ({ children }) => {
         );
     };
 
+    const markNotificationAsRead = async (notificationId) => {
+        try {
+            await apiClient.patch(`/notifications/${notificationId}/markAsRead`);
+
+            // Update state to reflect the read notification
+            setNotifications((prevNotifications) =>
+                prevNotifications.map((notification) =>
+                    notification._id === notificationId ? { ...notification, isRead: true } : notification
+                )
+            );
+        } catch (error) {
+            console.error("Failed to mark notification as read:", error);
+        }
+    };
+
+
     return (
         <NotificationsContext.Provider
-            value={{ notifications, addNotification, getNotificationsForUser }}
+            value={{ notifications, addNotification, getNotificationsForUser, markNotificationAsRead }}
         >
             {children}
         </NotificationsContext.Provider>

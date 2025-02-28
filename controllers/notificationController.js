@@ -1,7 +1,7 @@
 const NotificationModel = require("../models/notification");
 const utils = require("../utilities/utils");
 
-exports.saveNotification = (req, res, next) => {
+exports.saveSentNotification = (req, socket) => {
     const { receiver, sender, message, type } = req;
 
     // Create a new notification instance
@@ -15,19 +15,14 @@ exports.saveNotification = (req, res, next) => {
 
     // Save the notification to the database
     try {
-        notification.save()
-            .then((savedNotification) => {
-                // After saving, fetch notifications for the user and emit them back to the client
-                this.fetchNotificationsForUser(req, res, next);
-            })
-            .catch((err) => utils.sendErrorResponse(res, 400, "Error", "Failed to save notifications"))
+        notification.save();
     } catch (error) {
         console.log(error);
     }
 };
 
 // Fetch notifications for a specific user
-exports.fetchNotificationsForUser = (req, res, next) => {
+exports.fetchNotifications = (req, res, next) => {
     const { username } = req.currentUser;
 
     try {
@@ -41,18 +36,21 @@ exports.fetchNotificationsForUser = (req, res, next) => {
 };
 
 // Mark notification as read
-exports.markNotificationAsRead = (notificationId) => {
-    NotificationModel.findById(notificationId)
-        .then((notification) => {
-            if (notification) {
-                notification.isRead = true;
-                notification.save()
-                    .then(() => utils.sendSuccessResponse(res, 200, "Notification marked as read: ", notificationId))
-                    .catch((err) => utils.sendErrorResponse(res, 400, "Error", "Error marking notification as read"))
+exports.markNotificationAsRead = async (req, res) => {
+    try {
+        const { id } = req.params;  // Get notification ID from request parameters
 
-            }
-        })
-        .catch((err) => {
-            console.log(err);
-        });
+        const notification = await NotificationModel.findById(id);
+        if (!notification) {
+            return utils.sendErrorResponse(res, 404, "Error", "Notification not found");
+        }
+
+        notification.isRead = true;
+        await notification.save();
+
+        return utils.sendSuccessResponse(res, 200, "Notification marked as read", id);
+    } catch (error) {
+        console.error("Error marking notification as read:", error);
+        return utils.sendErrorResponse(res, 500, "Error", "Internal server error");
+    }
 };
