@@ -65,7 +65,6 @@ function ChatTabs() {
 
   // Set socket authentication and event listeners
   useEffect(() => {
-    socket.auth = { username };
     socket.connect();
 
     socket.on("fetchMessages", (messages) => {
