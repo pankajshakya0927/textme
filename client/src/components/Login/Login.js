@@ -13,6 +13,8 @@ import Toastr from "../Toastr/Toastr";
 import Utils from "../../shared/Utils";
 import "../../App.css";
 
+import socket from "../../utils/socket";
+
 const apiBaseUrl = process.env.REACT_APP_API_BASE_URL;
 
 function Login() {
@@ -50,6 +52,11 @@ function Login() {
         Utils.setItemToLocalStorage("current_user", JSON.stringify(response.data.data.current_user));
         Utils.setItemToLocalStorage("isLoggedIn", true);
         setIsLoggedIn(true);
+
+        // After successful login, set socket auth and connect
+        socket.auth = { token: response.data.data.access_token };
+        socket.connect();  // This ensures real-time features work immediately after login
+
         history.push("/chats");
       }
     } catch (error) {

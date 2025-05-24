@@ -1,0 +1,67 @@
+.call-window-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10000;
+  animation: fadeIn 0.3s ease forwards;
+}
+
+.call-window {
+  background: white;
+  padding: 25px 30px;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+  width: 100%;
+  max-width: 500px;
+  text-align: center;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  display: flex;
+  flex-direction: column;
+}
+
+.call-window h2 {
+  margin-bottom: 20px;
+  font-weight: 600;
+  color: #333;
+}
+
+.call-video {
+  border-radius: 12px;
+  background-color: black;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  margin-bottom: 20px;
+}
+
+.call-status {
+  font-size: 18px;
+  color: #555;
+  margin-bottom: 30px;
+}
+
+.call-hangup {
+  padding: 12px 32px;
+  background-color: #e53935;
+  color: white;
+  border: none;
+  border-radius: 9999px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  box-shadow: 0 4px 8px rgba(229,57,53,0.6);
+}
+
+.call-hangup:hover {
+  background-color: #b02a27;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0 }
+  to { opacity: 1 }
+}

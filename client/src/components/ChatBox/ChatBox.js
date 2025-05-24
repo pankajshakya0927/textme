@@ -111,10 +111,10 @@ export default function ChatBox(props) {
           </div>
           <div>
             <ButtonGroup aria-label="Call">
-              <Button variant="light">
+              <Button variant="light" onClick={props.onAudioCall}>
                 <MdCall color="rgb(76, 175, 80)" size={25} />
               </Button>
-              <Button variant="light">
+              <Button variant="light" onClick={props.onVideoCall}>
                 <FcVideoCall size={30} />
               </Button>
             </ButtonGroup>

@@ -72,7 +72,7 @@ io.on("connection", (socket) => {
     messageController.saveMessage(messageReq, socket);
     const sendTo = connectedUsers.filter(user => user.username === messageReq.to);
 
-    
+
     // emit the new message to all recipients socket id
     sendTo.forEach(user => {
       io.to(user.socketId).emit("newMessageReceived", messageReq);
@@ -114,6 +114,60 @@ io.on("connection", (socket) => {
       }
     } catch (error) {
       console.error("Error sending notification:", error);
+    }
+  });
+
+  // 📞 1. Handle WebRTC offer
+  socket.on("call-user", ({ to, offer }) => {
+    const target = connectedUsers.find(user => user.username === to);
+    if (target) {
+      io.to(target.socketId).emit("call-made", {
+        from: socket.user.username,
+        offer,
+      });
+    }
+  });
+
+  // 📞 2. Handle WebRTC answer
+  socket.on("make-answer", ({ to, answer }) => {
+    const target = connectedUsers.find(user => user.username === to);
+    if (target) {
+      io.to(target.socketId).emit("answer-made", {
+        from: socket.user.username,
+        answer,
+      });
+    }
+  });
+
+  // ❄️ 3. Handle ICE candidate exchange
+  socket.on("ice-candidate", ({ to, candidate }) => {
+    const target = connectedUsers.find(user => user.username === to);
+    if (target) {
+      io.to(target.socketId).emit("ice-candidate", {
+        from: socket.user.username,
+        candidate,
+      });
+    }
+  });
+
+  socket.on("call-rejected", ({ to }) => {
+    const target = connectedUsers.find(user => user.username === to);
+    if (target) {
+      io.to(target.socketId).emit("call-rejected", { from: socket.user.username });
+    }
+  });
+
+  socket.on("hang-up", ({ to }) => {
+    const target = connectedUsers.find(user => user.username === to);
+    if (target) {
+      io.to(target.socketId).emit("call-ended");
+    }
+  });
+
+  socket.on("call-ended", ({ to }) => {
+    const target = connectedUsers.find(u => u.username === to);
+    if (target) {
+      io.to(target.socketId).emit("call-ended");
     }
   });
 
