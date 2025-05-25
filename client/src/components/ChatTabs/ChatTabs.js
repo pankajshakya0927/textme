@@ -260,10 +260,10 @@ function ChatTabs() {
       <Toastr show={toastr.show} onHide={() => setToastr(options)} variant={toastr.variant} title={toastr.title} message={toastr.message} />
 
       <Tab.Container id="list-group-tabs">
-        <Row className={friends?.length ? "tabs g-1" : "hide"}>
+        <Row className={friends?.length ? "tabs g-1" : "hide"} style={{height: '100%', minHeight: 0, flex: 1}}>
           {isMobile}
-          <Col sm={4} style={{ display: isMobile && selectedChat ? "none" : "block" }}>
-            <ListGroup>
+          <Col sm={4} style={{ display: isMobile && selectedChat ? "none" : "flex", flexDirection: 'column', minHeight: 0, height: '100%' }}>
+            <ListGroup style={{flex: 1, minHeight: 0}}>
               <ListGroup.Item>
                 <ListGroup horizontal>
                   <ListGroup.Item className={tab === 1 ? "selected" : ""} action onClick={(e) => handleSetTab(1, e)}>Chats</ListGroup.Item>
@@ -303,7 +303,7 @@ function ChatTabs() {
 
           {/* Chat panel */}
           <Col sm={8} className="chat-panel-col" style={{ display: isMobile && !selectedChat ? "none" : "flex", flexDirection: "column", minHeight: 0, height: '100%' }}>
-            <div className="chat-panel-wrapper" style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+            <div className="chat-panel-wrapper" style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', height: '100%' }}>
               {!selectedChat && <div className="text-center mt-3"><p>No chats yet. Start a conversation!</p></div>}
               <Tab.Content style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
                 <Tab.Pane eventKey={selectedChat} style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
