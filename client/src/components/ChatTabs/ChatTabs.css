@@ -7,7 +7,7 @@
 .chats-tab,
 .friends-tab {
     overflow-y: auto;
-    height: calc(100vh - 159px) !important;
+    height: 100%;
 }
 
 .selected {
@@ -123,4 +123,25 @@
 
 .list-group-item.active:hover {
     background-color: rgb(0, 0, 0, 0.03) !important;
+}
+
+.chat-panel-wrapper {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.chat-panel-col {
+  display: flex !important;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+  padding: 0;
+}
+
+.tabs.g-1 {
+  height: 100%;
+  min-height: 0;
 }

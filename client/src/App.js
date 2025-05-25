@@ -18,13 +18,17 @@ function App() {
       <FriendsContextProvider>
         <UsersContextProvider>
           <Router>
-            <NavbarOffCanvas />
-            <Switch>
-              <Route exact path="/" component={Homepage} />
-              <Route exact path="/signup" component={Signup} />
-              <Route exact path="/login" component={Login} />
-              <Route exact path="/chats" component={ChatTabs} />
-            </Switch>
+            <div className="app-main-layout">
+              <NavbarOffCanvas />
+              <div className="app-content">
+                <Switch>
+                  <Route exact path="/" component={Homepage} />
+                  <Route exact path="/signup" component={Signup} />
+                  <Route exact path="/login" component={Login} />
+                  <Route exact path="/chats" component={ChatTabs} />
+                </Switch>
+              </div>
+            </div>
           </Router>
         </UsersContextProvider>
       </FriendsContextProvider>

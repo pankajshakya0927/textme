@@ -302,28 +302,30 @@ function ChatTabs() {
           </Col>
 
           {/* Chat panel */}
-          <Col sm={8} style={{ display: isMobile && !selectedChat ? "none" : "block" }}>
-            {!selectedChat && <div className="text-center mt-3"><p>No chats yet. Start a conversation!</p></div>}
-            <Tab.Content>
-              <Tab.Pane eventKey={selectedChat}>
-                <ChatBox
-                  chatId={chatId}
-                  chatWith={selectedChat}
-                  setSelectedChat={setSelectedChat}
-                  messages={messages}
-                  setMessages={setMessages}
-                  socket={socket}
-                  onVideoCall={() => {
-                    setIsCaller(true);
-                    setShowVideoCall(true);
-                  }}
-                  onAudioCall={() => {
-                    setIsCaller(true);
-                    setShowAudioCall(true);
-                  }}
-                />
-              </Tab.Pane>
-            </Tab.Content>
+          <Col sm={8} className="chat-panel-col" style={{ display: isMobile && !selectedChat ? "none" : "flex", flexDirection: "column", minHeight: 0, height: '100%' }}>
+            <div className="chat-panel-wrapper" style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+              {!selectedChat && <div className="text-center mt-3"><p>No chats yet. Start a conversation!</p></div>}
+              <Tab.Content style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+                <Tab.Pane eventKey={selectedChat} style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+                  <ChatBox
+                    chatId={chatId}
+                    chatWith={selectedChat}
+                    setSelectedChat={setSelectedChat}
+                    messages={messages}
+                    setMessages={setMessages}
+                    socket={socket}
+                    onVideoCall={() => {
+                      setIsCaller(true);
+                      setShowVideoCall(true);
+                    }}
+                    onAudioCall={() => {
+                      setIsCaller(true);
+                      setShowAudioCall(true);
+                    }}
+                  />
+                </Tab.Pane>
+              </Tab.Content>
+            </div>
           </Col>
         </Row>
 

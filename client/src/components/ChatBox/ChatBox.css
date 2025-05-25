@@ -1,5 +1,32 @@
 .box {
-    height: calc(100vh - 85px) !important;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    position: relative;
+    flex: 1 1 auto;
+    height: auto;
+}
+
+.card-header {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: #fff;
+}
+
+.card-footer {
+    position: sticky;
+    bottom: 0;
+    z-index: 2;
+    background: #fff;
+}
+
+.card-body.chat-box {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
 }
 
 .word-wrap {
