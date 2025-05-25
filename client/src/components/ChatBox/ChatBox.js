@@ -121,28 +121,13 @@ export default function ChatBox(props) {
           </div>
         </Card.Header>
         <Card.Body className="overflow-auto chat-box d-flex flex-column">
-          <div className="flex-grow-1">
-            {props.messages.map((msg, key) => (
-              <ListGroup key={key} className={msg.from === username ? "align-items-end mb-2" : "align-items-start mb-2"}>
-                <ListGroup.Item variant={msg.from === username ? "primary" : "light"}>
-                  {msg.message}
-                </ListGroup.Item>
-              </ListGroup>
-            ))}
-
-            {/* Typing Indicator as a message bubble */}
-            {/* {typingStatus?.text && props.chatWith === typingStatus.from && username === typingStatus.to && (
-              <ListGroup className="align-items-start mb-2">
-                <ListGroup.Item variant="light" className="typing-message">
-                  <span className="typing-indicator">
-                    <span className="dot"></span>
-                    <span className="dot"></span>
-                    <span className="dot"></span>
-                  </span>
-                </ListGroup.Item>
-              </ListGroup>
-            )} */}
-          </div>
+          {props.messages.map((msg, key) => (
+            <ListGroup key={key} className={msg.from === username ? "align-items-end mb-2" : "align-items-start mb-2"}>
+              <ListGroup.Item variant={msg.from === username ? "primary" : "light"}>
+                {msg.message}
+              </ListGroup.Item>
+            </ListGroup>
+          ))}
           <div ref={lastMessageRef}></div>
         </Card.Body>
         <Card.Footer>
