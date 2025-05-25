@@ -2,6 +2,10 @@
     height: calc(100vh - 85px) !important;
 }
 
+.offset-top {
+  margin-top: 56px;
+}
+
 .word-wrap {
     overflow-wrap: anywhere;
 }
@@ -65,4 +69,10 @@
     .back-btn {
         display: none !important;
     }
+}
+
+@media (max-width: 576px) {
+  .offset-top {
+    margin-top: 64px;
+  }
 }
