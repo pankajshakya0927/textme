@@ -55,7 +55,7 @@ function NavbarOffCanvas() {
       {/* Toastr Notifications */}
       <Toastr show={toastr.show} onHide={() => setToaster(toastrOptions)} variant={toastr.variant} title={toastr.title} message={toastr.message} />
 
-      <Navbar bg="primary" variant="dark" expand="md" sticky="top" expanded={navExpanded}>
+      <Navbar bg="primary" variant="dark" expand="md" sticky="top" fixed="top" expanded={navExpanded}>
         <Container fluid>
           <div className="d-flex align-items-center gap-3">
             {/* Brand Name */}
