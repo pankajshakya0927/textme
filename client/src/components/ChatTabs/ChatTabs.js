@@ -91,8 +91,9 @@ function ChatTabs() {
     const onNewMessageReceived = (msg) => setNewMessage(msg);
 
     // 📞 Incoming call offer
-    const onCallMade = ({ from, offer }) => {
-      setIncomingCall({ from, offer });   // Show incoming call modal
+    const onCallMade = ({ from, offer, callType }) => {
+      console.log("Incoming call from:", from, "Type:", callType);
+      setIncomingCall({ from, offer, callType });   // Show incoming call modal
       setCallPeerUser(from);              // Store caller for use in CallWindow
     };
 
@@ -235,7 +236,11 @@ function ChatTabs() {
     setCallPeerUser(incomingCall.from); // if you have this state
     setIncomingOffer(incomingCall.offer);
     setIncomingCall(null);
-    setShowVideoCall(true);
+    if (incomingCall.callType === 'audio') {
+      setShowAudioCall(true);
+    } else {
+      setShowVideoCall(true);
+    }
   };
 
   // Reject incoming call: notify caller, close modal
@@ -347,7 +352,6 @@ function ChatTabs() {
             socket={socket}
             peerUser={callPeerUser || selectedChat}
             isCaller={isCaller}
-            // answer={callAnswer}
             offer={incomingOffer}
           />
         )}
@@ -360,7 +364,6 @@ function ChatTabs() {
             socket={socket}
             peerUser={callPeerUser || selectedChat}
             isCaller={isCaller}
-            // answer={callAnswer}
             offer={incomingOffer}
           />
         )}

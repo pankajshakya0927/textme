@@ -113,7 +113,7 @@ export default function CallWindow({ type, onClose, socket, peerUser, isCaller, 
           // Create and send an offer if this client is the caller
           const offer = await rtc.createOffer();
           await rtc.setLocalDescription(offer);
-          socket.emit("call-user", { to: peerUser, offer });
+          socket.emit("call-user", { to: peerUser, offer, callType: type });
         } else if (offer) {
           // Set remote description with offer and send an answer if receiver
           await rtc.setRemoteDescription(new RTCSessionDescription(offer));

@@ -118,12 +118,13 @@ io.on("connection", (socket) => {
   });
 
   // 📞 1. Handle WebRTC offer
-  socket.on("call-user", ({ to, offer }) => {
+  socket.on("call-user", ({ to, offer, callType }) => {
     const target = connectedUsers.find(user => user.username === to);
     if (target) {
       io.to(target.socketId).emit("call-made", {
         from: socket.user.username,
         offer,
+        callType
       });
     }
   });
