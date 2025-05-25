@@ -44,24 +44,15 @@
   margin-bottom: 30px;
 }
 
-.call-hangup {
-  padding: 12px 32px;
-  background-color: #e53935;
-  color: white;
-  border: none;
-  border-radius: 9999px;
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-  box-shadow: 0 4px 8px rgba(229,57,53,0.6);
-}
-
-.call-hangup:hover {
-  background-color: #b02a27;
-}
-
 @keyframes fadeIn {
   from { opacity: 0 }
   to { opacity: 1 }
+}
+
+@media (max-width: 576px) {
+  .call-window {
+    height: auto;
+    max-height: 90vh;
+    margin: 5vh 0;
+  }
 }

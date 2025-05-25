@@ -1,10 +1,18 @@
-import React, { useEffect, useRef, useCallback } from "react";
+import React, { useEffect, useRef, useCallback, useState } from "react";
+import { Button } from "react-bootstrap";
+import { FiMic, FiMicOff, FiVideo, FiVideoOff, FiPhoneOff } from "react-icons/fi";
 import "./CallWindow.css";
 
 export default function CallWindow({ type, onClose, socket, peerUser, isCaller, offer }) {
   const localRef = useRef(null);
   const remoteRef = useRef(null);
+  const remoteAudioRef = useRef(null);
   const pc = useRef(null);
+  const alreadyConnected = useRef(false);
+
+  // New states to control mic and video mute/unmute
+  const [micMuted, setMicMuted] = useState(false);
+  const [videoOff, setVideoOff] = useState(false);
 
   const hangUp = useCallback(() => {
     if (pc.current) {
@@ -19,6 +27,26 @@ export default function CallWindow({ type, onClose, socket, peerUser, isCaller, 
     onClose();
   }, [peerUser, socket, onClose]);
 
+  // Toggle microphone mute/unmute
+  const toggleMic = () => {
+    if (!window.localStream) return;
+    const enabled = !micMuted;
+    window.localStream.getAudioTracks().forEach(track => {
+      track.enabled = !enabled; // toggle track.enabled properly
+    });
+    setMicMuted(enabled);
+  };
+
+  // Toggle video on/off
+  const toggleVideo = () => {
+    if (!window.localStream) return;
+    const enabled = !videoOff;
+    window.localStream.getVideoTracks().forEach(track => {
+      track.enabled = !enabled;
+    });
+    setVideoOff(enabled);
+  };
+
   useEffect(() => {
     const rtc = new RTCPeerConnection({
       iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
@@ -27,89 +55,97 @@ export default function CallWindow({ type, onClose, socket, peerUser, isCaller, 
 
     rtc.onicecandidate = (event) => {
       if (event.candidate) {
-        console.log("💧 Sending ICE candidate");
+        // Send ICE candidate to the remote peer via socket
         socket.emit("ice-candidate", { to: peerUser, candidate: event.candidate });
       }
     };
 
     rtc.ontrack = (event) => {
-      console.log("✅ ontrack fired — remote stream received");
-      if (remoteRef.current) {
-        remoteRef.current.srcObject = event.streams[0];
+      // Handle remote media stream once received
+      const [stream] = event.streams;
+      if (type === "video" && remoteRef.current) {
+        remoteRef.current.srcObject = stream;
+      } else if (type === "audio" && remoteAudioRef.current) {
+        remoteAudioRef.current.srcObject = stream;
       }
     };
 
     rtc.onconnectionstatechange = () => {
-      console.log("🔗 Connection state:", rtc.connectionState);
+      // Monitor connection state changes for debugging or UI updates
     };
 
-    // Setup local stream and add tracks
+    // Setup local media stream and establish WebRTC connection
     const setupStreamAndConnect = async () => {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
           video: type === "video",
-          audio: true,
+          audio: {
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true
+          },
         });
         window.localStream = stream;
 
+        // Attach the local media stream to the local video element
         if (localRef.current) {
           localRef.current.srcObject = stream;
-          console.log("🎥 Local stream attached");
         }
 
+        // Add local media tracks to the RTCPeerConnection
         stream.getTracks().forEach(track => {
-          console.log("🎤 Adding local track:", track.kind);
           rtc.addTrack(track, stream);
         });
 
         if (isCaller) {
-          console.log("📞 Creating offer as caller");
+          // Create and send an offer if this client is the caller
           const offer = await rtc.createOffer();
           await rtc.setLocalDescription(offer);
-          console.log("📨 Sending offer");
           socket.emit("call-user", { to: peerUser, offer });
         } else if (offer) {
-          console.log("📥 Receiver setting remote description");
+          // Set remote description with offer and send an answer if receiver
           await rtc.setRemoteDescription(new RTCSessionDescription(offer));
           const answer = await rtc.createAnswer();
           await rtc.setLocalDescription(answer);
           socket.emit("make-answer", { to: peerUser, answer });
-          console.log("📤 Sent answer to caller");
         }
       } catch (err) {
-        console.error("❌ Error setting up stream or SDP:", err);
+        console.error("Media or SDP error:", err);
         alert("Camera/Microphone error or SDP problem");
         hangUp();
       }
     };
 
-    // Listen for answer from remote (caller side)
+    // Listen for answer from remote peer (caller side)
     socket.on("answer-made", async ({ from, answer }) => {
-      console.log("📨 Received answer-made event:", { from, answer, peerUser });
       if (from !== peerUser) return;
       try {
-        console.log("📥 Caller received answer — setting remote description");
+        // Set remote description with received answer
         await rtc.setRemoteDescription(new RTCSessionDescription(answer));
       } catch (err) {
-        console.error("❌ Error setting remote description on answer:", err);
+        // Errors setting remote description are silently ignored here
       }
     });
 
-    // Listen for ICE candidates from remote
+    // Listen for ICE candidates from remote peer
     socket.on("ice-candidate", async ({ from, candidate }) => {
       if (from !== peerUser) return;
       try {
+        // Add the received ICE candidate to the RTCPeerConnection
         await rtc.addIceCandidate(new RTCIceCandidate(candidate));
-        console.log("💧 ICE candidate added");
       } catch (e) {
-        console.error("❌ Failed to add ICE candidate", e);
+        // Errors adding ICE candidates are silently ignored here
       }
     });
 
-    setupStreamAndConnect();
+    // Prevent duplicate connection attempts due to re-renders or prop changes
+    if (!alreadyConnected.current) {
+      alreadyConnected.current = true;
+      setupStreamAndConnect();
+    }
 
     return () => {
-      console.log("🧹 Cleaning up call");
+      // Cleanup: hang up call and remove socket listeners
       hangUp();
       socket.off("answer-made");
       socket.off("ice-candidate");
@@ -120,14 +156,57 @@ export default function CallWindow({ type, onClose, socket, peerUser, isCaller, 
     <div className="call-window-backdrop">
       <div className="call-window">
         <h2>{type === "video" ? "Video Call" : "Audio Call"}</h2>
+
         {type === "video" && (
           <>
-            <video ref={localRef} autoPlay playsInline className="call-video" />
+            {/* Remote video */}
             <video ref={remoteRef} autoPlay playsInline className="call-video" />
+            {/* Local video */}
+            <video ref={localRef} autoPlay playsInline muted className="call-video local-video" />
           </>
         )}
-        {type === "audio" && <div className="call-status">🎧 Audio call in progress...</div>}
-        <button onClick={hangUp} className="call-hangup">Hang Up</button>
+
+        {type === "audio" && (
+          <>
+            <div className="call-status">🎧 Audio call in progress...</div>
+            <audio ref={remoteAudioRef} autoPlay playsInline />
+          </>
+        )}
+
+        {/* Controls for mute/unmute and video on/off */}
+        <div className="call-controls">
+          <Button
+            variant={micMuted ? "danger" : "light"}
+            onClick={toggleMic}
+            title={micMuted ? "Unmute Microphone" : "Mute Microphone"}
+            aria-label={micMuted ? "Unmute Microphone" : "Mute Microphone"}
+            className="call-btn"
+          >
+            {micMuted ? <FiMicOff size={24} /> : <FiMic size={24} />}
+          </Button>
+
+          {type === "video" && (
+            <Button
+              variant={videoOff ? "danger" : "light"}
+              onClick={toggleVideo}
+              title={videoOff ? "Turn Video On" : "Turn Video Off"}
+              aria-label={videoOff ? "Turn Video On" : "Turn Video Off"}
+              className="call-btn"
+            >
+              {videoOff ? <FiVideoOff size={24} /> : <FiVideo size={24} />}
+            </Button>
+          )}
+
+          <Button
+            variant="danger"
+            onClick={hangUp}
+            title="Hang Up"
+            aria-label="Hang Up"
+            className="call-btn hangup-btn"
+          >
+            <FiPhoneOff size={24} />
+          </Button>
+        </div>
       </div>
     </div>
   );
