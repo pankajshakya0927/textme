@@ -68,7 +68,8 @@
 }
 
 @media (max-width: 576px) {
-  .top {
-    height: calc(100vh - 100px) !important;
+  .box {
+    padding-top: 85px; /* Match navbar height */
+    height: calc(100vh - 85px) !important;
   }
 }
