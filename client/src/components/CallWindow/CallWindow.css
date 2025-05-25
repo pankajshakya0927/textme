@@ -14,15 +14,17 @@
 
 .call-window {
   background: white;
-  padding: 25px 30px;
+  padding: 20px 20px;
   border-radius: 12px;
   box-shadow: 0 8px 24px rgba(0,0,0,0.2);
-  width: 100%;
-  max-width: 500px;
+  width: 90vw;
+  max-height: 80vh;
+  overflow: hidden;
   text-align: center;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   display: flex;
   flex-direction: column;
+  position: relative;
 }
 
 .call-window h2 {
@@ -31,11 +33,37 @@
   color: #333;
 }
 
-.call-video {
+.video-container {
+  position: relative;
+  width: 100%;
+  height: 40vh;
+  max-height: 80vh;
   border-radius: 12px;
-  background-color: black;
+  overflow: hidden;
   box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  background-color: black;
   margin-bottom: 20px;
+}
+
+.call-video.remote-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 12px;
+  margin: 0;
+}
+
+.call-video.local-video {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  width: 120px;
+  height: 90px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  background-color: black;
+  object-fit: cover;
+  z-index: 10;
 }
 
 .call-status {
@@ -52,7 +80,9 @@
 @media (max-width: 576px) {
   .call-window {
     height: auto;
-    max-height: 90vh;
+    max-height: 80vh;
     margin: 5vh 0;
+    width: 90vw;
+    padding: 15px;
   }
 }

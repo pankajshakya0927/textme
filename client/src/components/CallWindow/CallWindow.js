@@ -82,10 +82,18 @@ export default function CallWindow({ type, onClose, socket, peerUser, isCaller, 
           audio: {
             echoCancellation: true,
             noiseSuppression: true,
-            autoGainControl: true
+            autoGainControl: true,
+            sampleRate: 48000,
+            channelCount: 1
           },
         });
         window.localStream = stream;
+
+        if (type === "audio") {
+          stream.getAudioTracks().forEach(track => {
+            track.enabled = true; // ensure audio track is on
+          });
+        }
 
         // Attach the local media stream to the local video element
         if (localRef.current) {
@@ -158,12 +166,21 @@ export default function CallWindow({ type, onClose, socket, peerUser, isCaller, 
         <h2>{type === "video" ? "Video Call" : "Audio Call"}</h2>
 
         {type === "video" && (
-          <>
-            {/* Remote video */}
-            <video ref={remoteRef} autoPlay playsInline className="call-video" />
-            {/* Local video */}
-            <video ref={localRef} autoPlay playsInline muted className="call-video local-video" />
-          </>
+          <div className="video-container">
+            <video
+              ref={remoteRef}
+              autoPlay
+              playsInline
+              className="call-video remote-video"
+            />
+            <video
+              ref={localRef}
+              muted
+              autoPlay
+              playsInline
+              className="call-video local-video"
+            />
+          </div>
         )}
 
         {type === "audio" && (
