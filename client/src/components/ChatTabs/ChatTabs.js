@@ -302,11 +302,11 @@ function ChatTabs() {
           </Col>
 
           {/* Chat panel */}
-          <Col sm={8} className="chat-panel-col" style={{ display: isMobile && !selectedChat ? "none" : "flex", flexDirection: "column", minHeight: 0, height: '100%' }}>
-            <div className="chat-panel-wrapper" style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', height: '100%' }}>
+          <Col sm={8} className="chat-panel-col" style={{ display: isMobile && !selectedChat ? "none" : "flex", flexDirection: "column", height: '100%', minHeight: 0, padding: 0 }}>
+            <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', height: '100%' }}>
               {!selectedChat && <div className="text-center mt-3"><p>No chats yet. Start a conversation!</p></div>}
-              <Tab.Content style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
-                <Tab.Pane eventKey={selectedChat} style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+              <Tab.Content style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', height: '100%' }}>
+                <Tab.Pane eventKey={selectedChat} style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', height: '100%' }}>
                   <ChatBox
                     chatId={chatId}
                     chatWith={selectedChat}
