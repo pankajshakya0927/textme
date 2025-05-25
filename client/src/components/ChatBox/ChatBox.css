@@ -67,9 +67,8 @@
     }
 }
 
-@media (max-width: 576px) {
-  .box {
-    padding-top: 85px; /* Match navbar height */
-    height: calc(100vh - 85px) !important;
+@media (max-width: 576px) and (pointer: coarse) {
+  .chat-mobile-offset {
+    padding-top: 56px;
   }
 }
