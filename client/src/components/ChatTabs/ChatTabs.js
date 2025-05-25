@@ -35,9 +35,9 @@ function ChatTabs() {
   const [showVideoCall, setShowVideoCall] = useState(false);
   const [showAudioCall, setShowAudioCall] = useState(false);
   const [incomingCall, setIncomingCall] = useState(null);
-  // const [callAnswer, setCallAnswer] = useState(null);
   const [isCaller, setIsCaller] = useState(false);
   const [callPeerUser, setCallPeerUser] = useState(null);
+  const [incomingOffer, setIncomingOffer] = useState(null);
 
   const { updatedFriends } = useContext(FriendsContext);
   const { isLoggedIn } = useContext(AuthContext);
@@ -96,12 +96,6 @@ function ChatTabs() {
       setCallPeerUser(from);              // Store caller for use in CallWindow
     };
 
-    // const onAnswerMade = ({ from, answer }) => {
-    //   // if (from !== callPeerUser) return;
-    //   // Update state so CallWindow gets this answer prop
-    //   setCallAnswer(answer);
-    // };
-
     // 📴 Call ended (hang up or rejected)
     const onCallEnded = () => {
       setShowVideoCall(false);
@@ -125,7 +119,6 @@ function ChatTabs() {
     socket.on("fetchMessages", onFetchMessages);
     socket.on("newMessageReceived", onNewMessageReceived);
     socket.on("call-made", onCallMade);
-    // socket.on("answer-made", onAnswerMade);
     socket.on("call-ended", onCallEnded);
     socket.on("call-rejected", onCallRejected);
 
@@ -240,6 +233,7 @@ function ChatTabs() {
   const acceptCall = () => {
     setIsCaller(false);
     setCallPeerUser(incomingCall.from); // if you have this state
+    setIncomingOffer(incomingCall.offer);
     setIncomingCall(null);
     setShowVideoCall(true);
   };
@@ -354,7 +348,7 @@ function ChatTabs() {
             peerUser={callPeerUser || selectedChat}
             isCaller={isCaller}
             // answer={callAnswer}
-            offer={incomingCall?.offer}
+            offer={incomingOffer}
           />
         )}
 
@@ -367,7 +361,7 @@ function ChatTabs() {
             peerUser={callPeerUser || selectedChat}
             isCaller={isCaller}
             // answer={callAnswer}
-            offer={incomingCall?.offer}
+            offer={incomingOffer}
           />
         )}
 

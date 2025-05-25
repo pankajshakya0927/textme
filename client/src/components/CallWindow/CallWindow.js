@@ -85,6 +85,7 @@ export default function CallWindow({ type, onClose, socket, peerUser, isCaller, 
 
     // Listen for answer from remote (caller side)
     socket.on("answer-made", async ({ from, answer }) => {
+      console.log("📨 Received answer-made event:", { from, answer, peerUser });
       if (from !== peerUser) return;
       try {
         console.log("📥 Caller received answer — setting remote description");
