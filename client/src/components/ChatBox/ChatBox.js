@@ -95,7 +95,7 @@ export default function ChatBox(props) {
     <>
       <Toastr show={toastr.show} onHide={handleOnHide} variant={toastr.variant} title={toastr.title} message={toastr.message} />
 
-      <Card className="box chat-mobile-offset">
+      <Card className="box">
         <Card.Header className="d-flex align-items-center justify-content-between">
           <div className="d-flex align-items-center gap-2">
             <Button className="back-btn" variant="light" onClick={() => props.setSelectedChat(null)}>

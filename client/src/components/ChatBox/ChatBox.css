@@ -66,9 +66,3 @@
         display: none !important;
     }
 }
-
-@media (max-width: 576px) and (pointer: coarse) {
-  .chat-mobile-offset {
-    padding-top: 56px;
-  }
-}
