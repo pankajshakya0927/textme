@@ -80,12 +80,16 @@ export default function CallWindow({ type, onClose, socket, peerUser, isCaller, 
         const stream = await navigator.mediaDevices.getUserMedia({
           video: type === "video",
           audio: {
-            echoCancellation: true,
-            noiseSuppression: true,
-            autoGainControl: true,
-            sampleRate: 48000,
-            channelCount: 1
-          },
+            echoCancellation: true,       // ✅ Reduces echo/feedback between mic and speaker
+            noiseSuppression: false,    // Disabled to avoid cutting out voices when both talk
+            // noiseSuppression: true,       // ✅ Suppresses constant background noise (e.g., fans, typing)
+            autoGainControl: false,       // ❌ Leave off for consistent volume during overlaps
+            channelCount: 1,              // ✅ Mono is sufficient for voice and more compatible
+            sampleRate: 48000,            // ✅ Standard for Opus codec (used in WebRTC)
+            sampleSize: 16,               // ✅ 16-bit depth is widely supported
+            latency: 0.01,                // ⚠️ Low latency helps, but not always honored
+            volume: 1.0                   // ✅ Full mic volume (can be adjusted if needed)
+          }
         });
         window.localStream = stream;
 
