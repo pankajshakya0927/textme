@@ -4,31 +4,20 @@
     min-height: 0;
     position: relative;
     flex: 1 1 auto;
-    height: auto;
+    height: 100%;
 }
 
 .card-header {
-    position: sticky;
+    /* Remove sticky positioning */
+    position: relative;
     top: 0;
     z-index: 2;
     background: #fff;
 }
 
-@media (max-width: 575.98px) {
-    .card-header {
-        /* Use safe-area-inset-top for devices with overlay (iOS/modern mobile browsers) */
-        top: calc(env(safe-area-inset-top, 0px) + 0px);
-    }
-}
-
-@media (min-width: 576px) {
-  .card-header {
-    top: 0 !important;
-  }
-}
-
 .card-footer {
-    position: sticky;
+    /* Remove sticky positioning */
+    position: relative;
     bottom: 0;
     z-index: 2;
     background: #fff;
