@@ -67,8 +67,9 @@
     }
 }
 
-@media (max-width: 576px) {
+@media (pointer: coarse) {
   .box {
-    height: calc(100vh - 120px);
+    height: calc(100vh - 140px) !important;
+    margin-top: 56px;
   }
 }
