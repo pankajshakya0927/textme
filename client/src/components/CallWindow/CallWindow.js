@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useCallback, useState } from "react";
 import { Button } from "react-bootstrap";
-import { FiMic, FiMicOff, FiVideo, FiVideoOff, FiPhoneOff } from "react-icons/fi";
+import { FiMic, FiMicOff, FiVideo, FiVideoOff, FiPhoneOff, FiHeadphones } from "react-icons/fi";
 import "./CallWindow.css";
 
 export default function CallWindow({ type, onClose, socket, peerUser, isCaller, offer }) {
@@ -167,7 +167,18 @@ export default function CallWindow({ type, onClose, socket, peerUser, isCaller, 
   return (
     <div className="call-window-backdrop">
       <div className="call-window">
-        <h2>{type === "video" ? "Video Call" : "Audio Call"}</h2>
+        {/* Modern call header with icon, label, and peer name */}
+        <div className="call-header-modern">
+          {type === "video" ? (
+            <FiVideo size={28} className="call-header-icon" />
+          ) : (
+            <FiHeadphones size={28} className="call-header-icon" />
+          )}
+          <span className="call-header-label">
+            {type === "video" ? "Live Video" : "Voice Call"}
+          </span>
+          <span className="call-header-peer">with {peerUser}</span>
+        </div>
 
         {type === "video" && (
           <div className="video-container">

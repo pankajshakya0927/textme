@@ -102,12 +102,13 @@ export default function ChatBox(props) {
               <IoMdArrowRoundBack size={30} />
             </Button>
 
-            <h4 className="word-wrap mb-0">{props.chatWith}</h4>
-
-            {/* Typing Indicator (only show when active) */}
-            {typingStatus?.text && props.chatWith === typingStatus.from && username === typingStatus.to && (
-              <span className="typing-text">typing...</span>
-            )}
+            <div className="chat-header-names">
+              <h4 className="word-wrap mb-0">{props.chatWith}</h4>
+              {/* Typing Indicator (only show when active) */}
+              {typingStatus?.text && props.chatWith === typingStatus.from && username === typingStatus.to && (
+                <span className="typing-text">typing...</span>
+              )}
+            </div>
           </div>
           <div>
             <ButtonGroup aria-label="Call">

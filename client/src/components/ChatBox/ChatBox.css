@@ -95,3 +95,9 @@
         display: none !important;
     }
 }
+
+.chat-header-names {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}

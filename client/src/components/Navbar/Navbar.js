@@ -85,6 +85,7 @@ function NavbarOffCanvas() {
                     align="start"  // Align dropdown towards the right
                     style={{ minWidth: "300px" }}
                     container="body"  // Ensures dropdown is placed correctly
+                    className="notifications-dropdown-menu"
                     popperConfig={{
                       modifiers: [
                         { name: "preventOverflow", options: { boundary: "window" } }, // Prevents clipping
