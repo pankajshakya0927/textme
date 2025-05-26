@@ -165,10 +165,29 @@ io.on("connection", (socket) => {
     }
   });
 
+  // 📞 4. Handle call-ended (ensure both caller and callee get notified)
   socket.on("call-ended", ({ to }) => {
     const target = connectedUsers.find(u => u.username === to);
     if (target) {
       io.to(target.socketId).emit("call-ended");
+    }
+    // Also notify the sender (the one who hung up), so their UI always closes
+    io.to(socket.id).emit("call-ended");
+  });
+
+  // Handle call log messages from client
+  socket.on("sendCallLog", (callLogReq) => {
+    // Save the call log as a message in the database
+    messageController.saveMessage(callLogReq, socket);
+    // Emit the call log message to both users
+    const sendTo = connectedUsers.filter(user => user.username === callLogReq.to);
+    sendTo.forEach(user => {
+      io.to(user.socketId).emit("newMessageReceived", callLogReq);
+    });
+    // Also emit to sender for confirmation (if not already handled by optimistic UI)
+    const sender = connectedUsers.find(user => user.username === callLogReq.from);
+    if (sender) {
+      io.to(sender.socketId).emit("newMessageReceived", callLogReq);
     }
   });
 

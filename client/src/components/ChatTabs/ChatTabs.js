@@ -30,6 +30,7 @@ function ChatTabs() {
   const [tab, setTab] = useState(1);
   const [selectedChat, setSelectedChat] = useState();
   const [chatId, setChatId] = useState();
+  const [unreadChats, setUnreadChats] = useState({});
 
   // Call state managed globally here:
   const [showVideoCall, setShowVideoCall] = useState(false);
@@ -84,55 +85,66 @@ function ChatTabs() {
     };
   }, []);
 
+  // Ref to always have latest selectedChat in socket handlers
+  const selectedChatRef = useRef(selectedChat);
+  useEffect(() => {
+    selectedChatRef.current = selectedChat;
+  }, [selectedChat]);
+
   // ⚡ Set up socket event listeners for chat messages and call signaling
   useEffect(() => {
-    // 📨 Incoming messages
+    // Handler definitions must be inside useEffect for registration/unregistration
     const onFetchMessages = (msgs) => setMessages(msgs);
-    const onNewMessageReceived = (msg) => setNewMessage(msg);
-
-    // 📞 Incoming call offer
+    const onNewMessageReceived = (msg) => {
+      setNewMessage(msg);
+      if (msg.from !== selectedChatRef.current) {
+        setUnreadChats(prev => ({ ...prev, [msg.from]: true }));
+      }
+    };
     const onCallMade = ({ from, offer, callType }) => {
-      console.log("Incoming call from:", from, "Type:", callType);
-      setIncomingCall({ from, offer, callType });   // Show incoming call modal
-      setCallPeerUser(from);              // Store caller for use in CallWindow
+      setIncomingCall({ from, offer, callType });
+      setCallPeerUser(from);
     };
-
-    // 📴 Call ended (hang up or rejected)
     const onCallEnded = () => {
+      // Restore UI cleanup: close call modal and call window, reset call state
       setShowVideoCall(false);
       setShowAudioCall(false);
       setIncomingCall(null);
       setIsCaller(false);
       setCallPeerUser(null);
+      setIncomingOffer(null);
     };
-
-    // ❌ Call rejected by peer
     const onCallRejected = ({ from }) => {
-      // Optional: could display a toast like "Call rejected by X"
       setShowVideoCall(false);
       setShowAudioCall(false);
       setIncomingCall(null);
       setIsCaller(false);
       setCallPeerUser(null);
     };
-
-    // ✅ Register socket listeners
-    socket.on("fetchMessages", onFetchMessages);
-    socket.on("newMessageReceived", onNewMessageReceived);
-    socket.on("call-made", onCallMade);
-    socket.on("call-ended", onCallEnded);
-    socket.on("call-rejected", onCallRejected);
-
-    // 🧹 Cleanup on unmount or re-render
-    return () => {
+    function registerSocketHandlers() {
+      socket.on("fetchMessages", onFetchMessages);
+      socket.on("newMessageReceived", onNewMessageReceived);
+      socket.on("call-made", onCallMade);
+      socket.on("call-ended", onCallEnded);
+      socket.on("call-rejected", onCallRejected);
+    }
+    function unregisterSocketHandlers() {
       socket.off("fetchMessages", onFetchMessages);
       socket.off("newMessageReceived", onNewMessageReceived);
       socket.off("call-made", onCallMade);
-      // socket.off("answer-made", onAnswerMade);
       socket.off("call-ended", onCallEnded);
       socket.off("call-rejected", onCallRejected);
+    }
+    registerSocketHandlers();
+    socket.on("connect", registerSocketHandlers);
+    socket.on("disconnect", unregisterSocketHandlers);
+    return () => {
+      unregisterSocketHandlers();
+      socket.off("connect", registerSocketHandlers);
+      socket.off("disconnect", unregisterSocketHandlers);
     };
-  }, [username]);
+  }, []);
+  // }, [username, selectedChat]);
 
   // Fetch friends list from API
   const fetchFriends = useCallback(async () => {
@@ -214,6 +226,8 @@ function ChatTabs() {
   // Open existing chat and fetch messages
   const handleSelectChat = (chat, e) => {
     e.preventDefault();
+    // Clear unread indicator for this chat
+    setUnreadChats(prev => ({ ...prev, [chat.chatWith]: false }));
     fetchMessages(chat);
   };
 
@@ -254,6 +268,24 @@ function ChatTabs() {
     setShowAudioCall(false);
   };
 
+  // Outgoing call: set peer user before opening call window
+  const handleStartVideoCall = (chatWith) => {
+    setIsCaller(true);
+    setCallPeerUser(chatWith);
+    setShowVideoCall(true);
+    setShowAudioCall(false);
+    setIncomingCall(null);
+    setIncomingOffer(null);
+  };
+  const handleStartAudioCall = (chatWith) => {
+    setIsCaller(true);
+    setCallPeerUser(chatWith);
+    setShowAudioCall(true);
+    setShowVideoCall(false);
+    setIncomingCall(null);
+    setIncomingOffer(null);
+  };
+
   return (
     <>
       {/* Toastr for error/success messages */}
@@ -275,11 +307,14 @@ function ChatTabs() {
               {tab === 1 && (
                 <div className="chats-tab">
                   {chats.map((chat, key) => (
-                    <ListGroup.Item key={key} action href={chat.chatWith} onClick={(e) => handleSelectChat(chat, e)} style={{ display: 'flex', alignItems: 'center' }}>
+                    <ListGroup.Item key={key} action href={chat.chatWith} onClick={(e) => handleSelectChat(chat, e)} style={{ display: 'flex', alignItems: 'center', position: 'relative' }}>
                       <div className="rounded-circle" style={{ width: 50, height: 50, backgroundColor: '#f0f0f0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         <FaUser size={30} />
                       </div>
                       <span className="mg-l10 word-wrap">{chat.chatWith}</span>
+                      {unreadChats[chat.chatWith] && (
+                        <span style={{ position: 'absolute', right: 16, top: '50%', transform: 'translateY(-50%)', background: '#ff3b30', color: '#fff', borderRadius: '50%', width: 18, height: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700 }}>•</span>
+                      )}
                     </ListGroup.Item>
                   ))}
                 </div>
@@ -314,14 +349,8 @@ function ChatTabs() {
                     messages={messages}
                     setMessages={setMessages}
                     socket={socket}
-                    onVideoCall={() => {
-                      setIsCaller(true);
-                      setShowVideoCall(true);
-                    }}
-                    onAudioCall={() => {
-                      setIsCaller(true);
-                      setShowAudioCall(true);
-                    }}
+                    onVideoCall={() => handleStartVideoCall(selectedChat)}
+                    onAudioCall={() => handleStartAudioCall(selectedChat)}
                   />
                 </Tab.Pane>
               </Tab.Content>
@@ -355,6 +384,8 @@ function ChatTabs() {
             peerUser={callPeerUser || selectedChat}
             isCaller={isCaller}
             offer={incomingOffer}
+            chatId={chatId}
+            username={username}
           />
         )}
 
@@ -367,6 +398,8 @@ function ChatTabs() {
             peerUser={callPeerUser || selectedChat}
             isCaller={isCaller}
             offer={incomingOffer}
+            chatId={chatId}
+            username={username}
           />
         )}
 

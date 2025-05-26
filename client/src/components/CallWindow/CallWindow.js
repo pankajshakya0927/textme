@@ -3,19 +3,48 @@ import { Button } from "react-bootstrap";
 import { FiMic, FiMicOff, FiVideo, FiVideoOff, FiPhoneOff, FiHeadphones } from "react-icons/fi";
 import "./CallWindow.css";
 
-export default function CallWindow({ type, onClose, socket, peerUser, isCaller, offer }) {
+export default function CallWindow({ type, onClose, socket, peerUser, isCaller, offer, chatId, username }) {
   const localRef = useRef(null);
   const remoteRef = useRef(null);
   const remoteAudioRef = useRef(null);
   const pc = useRef(null);
   const alreadyConnected = useRef(false);
 
-  // New states to control mic and video mute/unmute
   const [micMuted, setMicMuted] = useState(false);
   const [videoOff, setVideoOff] = useState(false);
 
+  // Helper to format duration for call log message
+  function formatDuration(duration) {
+    if (!duration || isNaN(duration)) return '';
+    if (duration < 60) return `${duration}s`;
+    if (duration < 3600) return `${Math.floor(duration / 60)}m ${duration % 60}s`;
+    const h = Math.floor(duration / 3600);
+    const m = Math.floor((duration % 3600) / 60);
+    const s = duration % 60;
+    return `${h}h ${m}m ${s}s`;
+  }
+
+  // Helper to emit a call log as a message
+  const sendCallLog = useCallback(({ callStatus, duration }) => {
+    if (chatId && username && peerUser) {
+      const callLogReq = {
+        chatId,
+        from: username,
+        to: peerUser,
+        type: type === 'video' ? 'video_call' : 'audio_call',
+        callStatus, // 'started', 'ended', 'missed'
+        duration, // optional
+        message: `${type === 'audio' ? 'Audio' : 'Video'} call ${callStatus}${duration ? ` (${formatDuration(duration)})` : ''}`
+      };
+      socket.emit("sendCallLog", callLogReq);
+    }
+  }, [chatId, username, peerUser, socket, type]);
+
   const hangUp = useCallback(() => {
     if (pc.current) {
+      pc.current.onicecandidate = null;
+      pc.current.ontrack = null;
+      pc.current.onconnectionstatechange = null;
       pc.current.close();
       pc.current = null;
     }
@@ -23,9 +52,16 @@ export default function CallWindow({ type, onClose, socket, peerUser, isCaller, 
       window.localStream.getTracks().forEach(track => track.stop());
       window.localStream = null;
     }
+    // Log call ended with duration if call was started
+    if (typeof window.callStartTime === 'number') {
+      const duration = Math.floor((Date.now() - window.callStartTime) / 1000);
+      sendCallLog({ callStatus: 'ended', duration });
+      window.callStartTime = undefined;
+    }
+
     socket.emit("call-ended", { to: peerUser });
     onClose();
-  }, [peerUser, socket, onClose]);
+  }, [peerUser, socket, onClose, sendCallLog]);
 
   // Toggle microphone mute/unmute
   const toggleMic = () => {
@@ -113,42 +149,47 @@ export default function CallWindow({ type, onClose, socket, peerUser, isCaller, 
           // Create and send an offer if this client is the caller
           const offer = await rtc.createOffer();
           await rtc.setLocalDescription(offer);
+          sendCallLog({ callStatus: 'started' });
+          window.callStartTime = Date.now(); // Start timer for caller
           socket.emit("call-user", { to: peerUser, offer, callType: type });
         } else if (offer) {
           // Set remote description with offer and send an answer if receiver
           await rtc.setRemoteDescription(new RTCSessionDescription(offer));
           const answer = await rtc.createAnswer();
           await rtc.setLocalDescription(answer);
+          window.callStartTime = Date.now(); // Start timer for receiver too
           socket.emit("make-answer", { to: peerUser, answer });
         }
       } catch (err) {
         console.error("Media or SDP error:", err);
         alert("Camera/Microphone error or SDP problem");
-        hangUp();
       }
     };
 
     // Listen for answer from remote peer (caller side)
-    socket.on("answer-made", async ({ from, answer }) => {
+    const handleAnswerMade = async ({ from, answer }) => {
       if (from !== peerUser) return;
       try {
         // Set remote description with received answer
         await rtc.setRemoteDescription(new RTCSessionDescription(answer));
       } catch (err) {
-        // Errors setting remote description are silently ignored here
+        // Ignore errors
       }
-    });
+    };
 
     // Listen for ICE candidates from remote peer
-    socket.on("ice-candidate", async ({ from, candidate }) => {
+    const handleIceCandidate = async ({ from, candidate }) => {
       if (from !== peerUser) return;
       try {
         // Add the received ICE candidate to the RTCPeerConnection
         await rtc.addIceCandidate(new RTCIceCandidate(candidate));
       } catch (e) {
-        // Errors adding ICE candidates are silently ignored here
+        // Ignore errors
       }
-    });
+    };
+
+    socket.on("answer-made", handleAnswerMade);
+    socket.on("ice-candidate", handleIceCandidate);
 
     // Prevent duplicate connection attempts due to re-renders or prop changes
     if (!alreadyConnected.current) {
@@ -157,12 +198,19 @@ export default function CallWindow({ type, onClose, socket, peerUser, isCaller, 
     }
 
     return () => {
-      // Cleanup: hang up call and remove socket listeners
-      hangUp();
       socket.off("answer-made");
       socket.off("ice-candidate");
+      
+      if (pc.current) {
+        pc.current.close();
+        pc.current = null;
+      }
+      if (window.localStream) {
+        window.localStream.getTracks().forEach((track) => track.stop());
+        window.localStream = null;
+      }
     };
-  }, [type, socket, peerUser, isCaller, offer, hangUp]);
+  }, [type, socket, peerUser, isCaller, offer, sendCallLog]);
 
   return (
     <div className="call-window-backdrop">
