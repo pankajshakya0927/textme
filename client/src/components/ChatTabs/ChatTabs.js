@@ -46,6 +46,7 @@ function ChatTabs() {
 
   const history = useHistory();
   const shouldFetch = useRef(true);
+  const notificationAudio = useRef(null);
 
   const options = Utils.getDefaultToastrOptions();
   const [toastr, setToastr] = useState(options);
@@ -99,6 +100,8 @@ function ChatTabs() {
       setNewMessage(msg);
       if (msg.from !== selectedChatRef.current) {
         setUnreadChats(prev => ({ ...prev, [msg.from]: true }));
+        // Play notification sound only if not focused
+        if (notificationAudio.current) notificationAudio.current.play();
       }
     };
     const onCallMade = ({ from, offer, callType }) => {
@@ -286,9 +289,15 @@ function ChatTabs() {
     setIncomingOffer(null);
   };
 
+  // Clear unread dot when a chat is selected
+  useEffect(() => {
+    if (selectedChat) setUnreadChats(prev => ({ ...prev, [selectedChat]: false }));
+  }, [selectedChat]);
+
   return (
     <>
       {/* Toastr for error/success messages */}
+      <audio ref={notificationAudio} src="/notification.mp3" preload="auto" style={{ display: 'none' }} />
       <Toastr show={toastr.show} onHide={() => setToastr(options)} variant={toastr.variant} title={toastr.title} message={toastr.message} />
 
       <Tab.Container id="list-group-tabs">

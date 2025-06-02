@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import '../../components/ChatTabs/ChatTabs.css';
 import { ListGroup, Col, Row, Tab } from "react-bootstrap";
 import { FaUser } from 'react-icons/fa';
@@ -10,7 +10,9 @@ export default function AnonymousChatTabs({ roomName, username, socket }) {
   const [privateMessages, setPrivateMessages] = useState({});
   const [members, setMembers] = useState([]);
   const [width, setWidth] = useState(window.innerWidth);
+  const [unreadTabs, setUnreadTabs] = useState({});
   const isMobile = width <= 576;
+  const notificationAudio = useRef(null);
 
   // Responsive
   useEffect(() => {
@@ -110,6 +112,37 @@ export default function AnonymousChatTabs({ roomName, username, socket }) {
     // eslint-disable-next-line
   }, []); // Only run on mount/unmount
 
+  // Play notification sound and set unread dot for group/private messages if not from self and not focused
+  useEffect(() => {
+    // Group message notification
+    if (groupMessages.length > 0) {
+      const lastMsg = groupMessages[groupMessages.length - 1];
+      if (lastMsg && lastMsg.from !== username && selectedTab !== 'group') {
+        // Play sound only if not focused
+        notificationAudio.current && notificationAudio.current.play();
+        // Set unread dot
+        setUnreadTabs(prev => ({ ...prev, group: true }));
+      }
+    }
+    // Private message notification
+    Object.keys(privateMessages).forEach(tab => {
+      const msgs = privateMessages[tab];
+      if (Array.isArray(msgs) && msgs.length > 0) {
+        const lastMsg = msgs[msgs.length - 1];
+        if (lastMsg && lastMsg.from !== username && selectedTab !== tab) {
+          notificationAudio.current && notificationAudio.current.play();
+          setUnreadTabs(prev => ({ ...prev, [tab]: true }));
+        }
+      }
+    });
+    // eslint-disable-next-line
+  }, [groupMessages, privateMessages]);
+
+  // Clear unread dot when tab is selected
+  useEffect(() => {
+    if (selectedTab) setUnreadTabs(prev => ({ ...prev, [selectedTab]: false }));
+  }, [selectedTab]);
+
   // Handlers
   const handleSendGroupMessage = (msg) => {
     socket.emit('anonymous-group-message', {
@@ -166,6 +199,7 @@ export default function AnonymousChatTabs({ roomName, username, socket }) {
   // UI
   return (
     <Tab.Container id="anonymous-list-group-tabs" activeKey={selectedTab}>
+      <audio ref={notificationAudio} src="/notification.mp3" preload="auto" style={{ display: 'none' }} />
       <Row className="tabs g-1" style={{height: '100%', minHeight: 0, flex: 1}}>
         <Col sm={4} style={{ display: isMobile && selectedTab && selectedTab !== 'members' ? "none" : "flex", flexDirection: 'column', minHeight: 0, height: '100%' }}>
           <ListGroup style={{flex: 1, minHeight: 0}}>
@@ -181,6 +215,7 @@ export default function AnonymousChatTabs({ roomName, username, socket }) {
                   <span role="img" aria-label="group">💬</span>
                 </div>
                 <span className="mg-l10 word-wrap">{roomName}</span>
+                {unreadTabs.group && <span style={{ position: 'absolute', right: 16, top: '50%', transform: 'translateY(-50%)', background: '#ff3b30', color: '#fff', borderRadius: '50%', width: 18, height: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700 }}>•</span>}
               </ListGroup.Item>
               {members.filter(m => m !== username).map((member) => (
                 <ListGroup.Item
@@ -195,6 +230,7 @@ export default function AnonymousChatTabs({ roomName, username, socket }) {
                     <FaUser size={30} />
                   </div>
                   <span className="mg-l10 word-wrap">{member}</span>
+                  {unreadTabs[member] && <span style={{ position: 'absolute', right: 16, top: '50%', transform: 'translateY(-50%)', background: '#ff3b30', color: '#fff', borderRadius: '50%', width: 18, height: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700 }}>•</span>}
                 </ListGroup.Item>
               ))}
             </div>
