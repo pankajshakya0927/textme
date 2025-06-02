@@ -10,6 +10,8 @@ import { BiSmile } from "react-icons/bi";
 import { GrAttachment } from "react-icons/gr";
 import { IoMdArrowRoundBack } from "react-icons/io";
 import ListGroup from "react-bootstrap/ListGroup";
+import data from '@emoji-mart/data'
+import Picker from '@emoji-mart/react'
 
 import Toastr from "../Toastr/Toastr";
 
@@ -19,6 +21,7 @@ export default function AnonymousChatBox(props) {
   const [message, setMessage] = useState("");
   const [typingStatus, setTypingStatus] = useState("");
   const [toastr, setToaster] = useState({ show: false, variant: '', title: '', message: '' });
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const handleOnHide = () => setToaster({ show: false, variant: '', title: '', message: '' });
   const lastMessageRef = useRef(null);
   const typingTimerRef = useRef(null);
@@ -80,6 +83,17 @@ export default function AnonymousChatBox(props) {
     }
   }, [props.messages]);
 
+  // Helper to convert unified code to emoji character (for emoji-mart v6+)
+  function unifiedToEmoji(unified) {
+    return unified.split('-').map(u => String.fromCodePoint(parseInt(u, 16))).join('');
+  }
+
+  const handleEmojiSelect = (emoji) => {
+    const emojiChar = emoji.unified ? unifiedToEmoji(emoji.unified) : '';
+    setMessage((prev) => prev + emojiChar);
+    setShowEmojiPicker(false);
+  };
+
   return (
     <>
       <Toastr show={toastr.show} onHide={handleOnHide} variant={toastr.variant} title={toastr.title} message={toastr.message} />
@@ -133,9 +147,16 @@ export default function AnonymousChatBox(props) {
         <Card.Footer>
           <Form>
             <InputGroup>
-              <Button variant="outline-secondary">
-                <BiSmile size={20} />
-              </Button>
+              <div style={{ position: 'relative' }}>
+                <Button variant="outline-secondary" type="button" onClick={() => setShowEmojiPicker((v) => !v)}>
+                  <BiSmile size={20} />
+                </Button>
+                {showEmojiPicker && (
+                  <div style={{ position: 'absolute', bottom: '40px', zIndex: 1000, left: 0 }}>
+                    <Picker data={data} onEmojiSelect={handleEmojiSelect} theme="light" />
+                  </div>
+                )}
+              </div>
               <Button variant="outline-secondary">
                 <GrAttachment size={17} />
               </Button>
