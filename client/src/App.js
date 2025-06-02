@@ -5,6 +5,7 @@ import ChatTabs from "./components/ChatTabs/ChatTabs";
 import NavbarOffCanvas from "./components/Navbar/Navbar";
 import Signup from "./components/Signup/Signup";
 import Login from "./components/Login/Login";
+import AnonymousChatRoom from "./components/AnonymousChatRoom/AnonymousChatRoom";
 
 import { FriendsContextProvider } from "./context/FriendsContext";
 import { NotificationsContextProvider } from "./context/NotificationsContext";
@@ -26,6 +27,7 @@ function App() {
                   <Route exact path="/signup" component={Signup} />
                   <Route exact path="/login" component={Login} />
                   <Route exact path="/chats" component={ChatTabs} />
+                  <Route path="/chatroom/:roomName" component={AnonymousChatRoom} />
                 </Switch>
               </div>
             </div>
