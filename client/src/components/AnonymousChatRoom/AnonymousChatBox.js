@@ -118,7 +118,13 @@ export default function AnonymousChatBox(props) {
                     {msg.from === username ? "You" : msg.from}
                   </span>
                 )}
-                {msg.message}
+                {msg.message || msg.content}
+                {/* Show timestamp if available */}
+                {msg.timestamp && (
+                  <span style={{ fontSize: '0.8em', color: '#888', marginLeft: 10 }}>
+                    {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </span>
+                )}
               </ListGroup.Item>
             </ListGroup>
           ))}

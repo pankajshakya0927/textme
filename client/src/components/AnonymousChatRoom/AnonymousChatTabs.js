@@ -51,10 +51,15 @@ export default function AnonymousChatTabs({ roomName, username, socket }) {
       setGroupMessages((prev) => [...prev, msg]);
     };
     const handlePrivateMessage = (msg) => {
-      setPrivateMessages((prev) => ({
-        ...prev,
-        [msg.from]: [...(prev[msg.from] || []), msg],
-      }));
+      // Store message under the other user's key (works for both sender and receiver)
+      const otherUser = msg.from === username ? msg.to : msg.from;
+      setPrivateMessages((prev) => {
+        const oldMessages = Array.isArray(prev[otherUser]) ? prev[otherUser] : [];
+        return {
+          ...prev,
+          [otherUser]: [...oldMessages, msg],
+        };
+      });
     };
     socket.on('anonymous-group-message', handleGroupMessage);
     socket.on('anonymous-private-message', handlePrivateMessage);
@@ -62,7 +67,31 @@ export default function AnonymousChatTabs({ roomName, username, socket }) {
       socket.off('anonymous-group-message', handleGroupMessage);
       socket.off('anonymous-private-message', handlePrivateMessage);
     };
+  }, [socket, username]);
+
+  // Group message history
+  useEffect(() => {
+    if (!socket) return;
+    const handleGroupHistory = (history) => setGroupMessages(history);
+    socket.on("anonymous-group-history", handleGroupHistory);
+    return () => socket.off("anonymous-group-history", handleGroupHistory);
   }, [socket]);
+
+  // Private message history
+  useEffect(() => {
+    if (!socket) return;
+    const handlePrivateHistory = (history) => {
+      const pm = {};
+      history.forEach(msg => {
+        const otherUser = msg.from === username ? msg.to : msg.from;
+        if (!pm[otherUser]) pm[otherUser] = [];
+        pm[otherUser].push(msg);
+      });
+      setPrivateMessages(pm);
+    };
+    socket.on("anonymous-private-history", handlePrivateHistory);
+    return () => socket.off("anonymous-private-history", handlePrivateHistory);
+  }, [socket, username]);
 
   // Ensure a chat is always selected (default to group if none)
   useEffect(() => {
@@ -77,8 +106,6 @@ export default function AnonymousChatTabs({ roomName, username, socket }) {
       if (username && socket) {
         socket.emit('anonymous-leave-room', { roomName, username });
       }
-      // Clear anonymous username for this room from localStorage
-      localStorage.removeItem(`anonymous_username_${roomName}`);
     };
     // eslint-disable-next-line
   }, []); // Only run on mount/unmount
@@ -122,6 +149,18 @@ export default function AnonymousChatTabs({ roomName, username, socket }) {
     if (isMobile) {
       setSelectedTab('members');
     }
+  };
+
+  // Handler for sending a private message with optimistic UI update
+  const handleOptimisticPrivateSend = (msg) => {
+    setPrivateMessages((prev) => {
+      const oldMessages = Array.isArray(prev[selectedTab]) ? prev[selectedTab] : [];
+      return {
+        ...prev,
+        [selectedTab]: [...oldMessages, { message: msg, from: username, to: selectedTab }],
+      };
+    });
+    handleSendPrivateMessage(msg);
   };
 
   // UI
@@ -186,12 +225,15 @@ export default function AnonymousChatTabs({ roomName, username, socket }) {
                     chatId={roomName + ':' + [username, selectedTab].sort().join('-')}
                     chatWith={selectedTab}
                     setSelectedChat={isMobile ? handleBack : () => {}}
-                    messages={privateMessages[selectedTab] || []}
-                    setMessages={(msgs) => setPrivateMessages((prev) => ({ ...prev, [selectedTab]: msgs }))}
+                    messages={Array.isArray(privateMessages[selectedTab]) ? privateMessages[selectedTab] : []}
+                    setMessages={(msgs) => setPrivateMessages((prev) => ({
+                      ...prev,
+                      [selectedTab]: Array.isArray(msgs) ? msgs : (Array.isArray(prev[selectedTab]) ? prev[selectedTab] : [])
+                    }))}
                     socket={socket}
                     username={username}
                     showCallButtons={true}
-                    onSendMessage={handleSendPrivateMessage}
+                    onSendMessage={handleOptimisticPrivateSend}
                     onVideoCall={handleVideoCall}
                     onAudioCall={handleAudioCall}
                   />

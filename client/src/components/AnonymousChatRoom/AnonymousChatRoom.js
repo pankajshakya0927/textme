@@ -4,10 +4,32 @@ import AnonymousChatTabs from "./AnonymousChatTabs";
 import socket from "../../utils/socket";
 
 function getStoredAnonymousUsername(roomName) {
-  return localStorage.getItem(`anonymous_username_${roomName}`) || "";
+  const value = sessionStorage.getItem(`anonymous_username_${roomName}`);
+  // Defensive: treat null, undefined, or empty string as no username
+  if (!value) return "";
+  return value;
 }
 function setStoredAnonymousUsername(roomName, username) {
-  localStorage.setItem(`anonymous_username_${roomName}`, username);
+  if (username) {
+    sessionStorage.setItem(`anonymous_username_${roomName}`, username);
+  } else {
+    sessionStorage.removeItem(`anonymous_username_${roomName}`);
+  }
+}
+function getStoredAnonymousToken(roomName) {
+  let token = sessionStorage.getItem(`anonymous_token_${roomName}`);
+  if (!token) {
+    token = crypto.randomUUID();
+    sessionStorage.setItem(`anonymous_token_${roomName}`, token);
+  }
+  return token;
+}
+function setStoredAnonymousToken(roomName, token) {
+  if (token) {
+    sessionStorage.setItem(`anonymous_token_${roomName}`, token);
+  } else {
+    sessionStorage.removeItem(`anonymous_token_${roomName}`);
+  }
 }
 
 export default function AnonymousChatRoom(props) {
@@ -38,8 +60,39 @@ export default function AnonymousChatRoom(props) {
     }
     setUsername(trimmed);
     setStoredAnonymousUsername(roomName, trimmed);
+    // Generate and store a new token for this username/room
+    const token = crypto.randomUUID();
+    setStoredAnonymousToken(roomName, token);
     setError("");
   }
+
+  // Join room effect
+  useEffect(() => {
+    if (!username || !socket) return;
+    const token = getStoredAnonymousToken(roomName);
+    socket.emit("anonymous-join-request", { roomName, username, token });
+    // eslint-disable-next-line
+  }, [username, socket, roomName]);
+
+  // Listen for join denied from server
+  React.useEffect(() => {
+    if (!socket) return;
+    const handleJoinDenied = (data) => {
+      setError(data.reason || "Join denied");
+      setUsername("");
+      setStoredAnonymousUsername(roomName, "");
+      setStoredAnonymousToken(roomName, "");
+    };
+    socket.on("anonymous-join-denied", handleJoinDenied);
+    return () => {
+      socket.off("anonymous-join-denied", handleJoinDenied);
+    };
+  }, [roomName]);
+
+  // Always keep input in sync with username for UX
+  useEffect(() => {
+    if (username) setInput(username);
+  }, [username]);
 
   // Prompt for username if not set (always allow username entry, even if socket is not ready)
   if (!username) {
