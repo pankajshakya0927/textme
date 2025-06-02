@@ -11,6 +11,7 @@ export default function AnonymousChatTabs({ roomName, username, socket }) {
   const [members, setMembers] = useState([]);
   const [width, setWidth] = useState(window.innerWidth);
   const [unreadTabs, setUnreadTabs] = useState({});
+  const [userInteracted, setUserInteracted] = useState(false);
   const isMobile = width <= 576;
   const notificationAudio = useRef(null);
 
@@ -112,14 +113,25 @@ export default function AnonymousChatTabs({ roomName, username, socket }) {
     // eslint-disable-next-line
   }, []); // Only run on mount/unmount
 
+  // Track first user interaction to enable audio playback
+  useEffect(() => {
+    const enableAudio = () => setUserInteracted(true);
+    window.addEventListener('pointerdown', enableAudio, { once: true });
+    window.addEventListener('keydown', enableAudio, { once: true });
+    return () => {
+      window.removeEventListener('pointerdown', enableAudio);
+      window.removeEventListener('keydown', enableAudio);
+    };
+  }, []);
+
   // Play notification sound and set unread dot for group/private messages if not from self and not focused
   useEffect(() => {
     // Group message notification
     if (groupMessages.length > 0) {
       const lastMsg = groupMessages[groupMessages.length - 1];
       if (lastMsg && lastMsg.from !== username && selectedTab !== 'group') {
-        // Play sound only if not focused
-        notificationAudio.current && notificationAudio.current.play();
+        // Play sound only if not focused and user has interacted
+        if (userInteracted && notificationAudio.current) notificationAudio.current.play();
         // Set unread dot
         setUnreadTabs(prev => ({ ...prev, group: true }));
       }
@@ -130,13 +142,13 @@ export default function AnonymousChatTabs({ roomName, username, socket }) {
       if (Array.isArray(msgs) && msgs.length > 0) {
         const lastMsg = msgs[msgs.length - 1];
         if (lastMsg && lastMsg.from !== username && selectedTab !== tab) {
-          notificationAudio.current && notificationAudio.current.play();
+          if (userInteracted && notificationAudio.current) notificationAudio.current.play();
           setUnreadTabs(prev => ({ ...prev, [tab]: true }));
         }
       }
     });
     // eslint-disable-next-line
-  }, [groupMessages, privateMessages]);
+  }, [groupMessages, privateMessages, userInteracted]);
 
   // Clear unread dot when tab is selected
   useEffect(() => {

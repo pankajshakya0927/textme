@@ -47,6 +47,7 @@ function ChatTabs() {
   const history = useHistory();
   const shouldFetch = useRef(true);
   const notificationAudio = useRef(null);
+  const [userInteracted, setUserInteracted] = useState(false);
 
   const options = Utils.getDefaultToastrOptions();
   const [toastr, setToastr] = useState(options);
@@ -92,6 +93,17 @@ function ChatTabs() {
     selectedChatRef.current = selectedChat;
   }, [selectedChat]);
 
+  // Track first user interaction to enable audio playback
+  useEffect(() => {
+    const enableAudio = () => setUserInteracted(true);
+    window.addEventListener('pointerdown', enableAudio, { once: true });
+    window.addEventListener('keydown', enableAudio, { once: true });
+    return () => {
+      window.removeEventListener('pointerdown', enableAudio);
+      window.removeEventListener('keydown', enableAudio);
+    };
+  }, []);
+
   // ⚡ Set up socket event listeners for chat messages and call signaling
   useEffect(() => {
     // Handler definitions must be inside useEffect for registration/unregistration
@@ -100,8 +112,8 @@ function ChatTabs() {
       setNewMessage(msg);
       if (msg.from !== selectedChatRef.current) {
         setUnreadChats(prev => ({ ...prev, [msg.from]: true }));
-        // Play notification sound only if not focused
-        if (notificationAudio.current) notificationAudio.current.play();
+        // Play notification sound only if not focused and user has interacted
+        if (userInteracted && notificationAudio.current) notificationAudio.current.play();
       }
     };
     const onCallMade = ({ from, offer, callType }) => {
@@ -146,7 +158,7 @@ function ChatTabs() {
       socket.off("connect", registerSocketHandlers);
       socket.off("disconnect", unregisterSocketHandlers);
     };
-  }, []);
+  }, [userInteracted]);
   // }, [username, selectedChat]);
 
   // Fetch friends list from API
@@ -297,7 +309,7 @@ function ChatTabs() {
   return (
     <>
       {/* Toastr for error/success messages */}
-      <audio ref={notificationAudio} src="/notification.mp3" preload="auto" style={{ display: 'none' }} />
+      <audio ref={notificationAudio} src={process.env.PUBLIC_URL + '/notification.mp3'} preload="auto" style={{ display: 'none' }} />
       <Toastr show={toastr.show} onHide={() => setToastr(options)} variant={toastr.variant} title={toastr.title} message={toastr.message} />
 
       <Tab.Container id="list-group-tabs">
