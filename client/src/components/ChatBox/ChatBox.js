@@ -11,7 +11,7 @@ import { GrAttachment } from "react-icons/gr";
 import { IoMdArrowRoundBack } from "react-icons/io";
 import ListGroup from "react-bootstrap/ListGroup";
 import data from '@emoji-mart/data'
-import { Picker } from 'emoji-mart'
+import Picker from '@emoji-mart/react'
 
 import { AuthContext } from "../../context/AuthContext";
 import Toastr from "../Toastr/Toastr";
