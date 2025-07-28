@@ -200,7 +200,7 @@ export default function CallWindow({ type, onClose, socket, peerUser, isCaller, 
     return () => {
       socket.off("answer-made");
       socket.off("ice-candidate");
-      
+
       if (pc.current) {
         pc.current.close();
         pc.current = null;
@@ -213,81 +213,81 @@ export default function CallWindow({ type, onClose, socket, peerUser, isCaller, 
   }, [type, socket, peerUser, isCaller, offer, sendCallLog]);
 
   return (
-    <div className="call-window-backdrop">
-      <div className="call-window">
-        {/* Modern call header with icon, label, and peer name */}
-        <div className="call-header-modern">
-          {type === "video" ? (
-            <FiVideo size={28} className="call-header-icon" />
-          ) : (
-            <FiHeadphones size={28} className="call-header-icon" />
-          )}
-          <span className="call-header-label">
-            {type === "video" ? "Live Video" : "Voice Call"}
-          </span>
-          <span className="call-header-peer">with {peerUser}</span>
+  <div className="call-window-backdrop fullscreen">
+    <div className={`call-window fullscreen ${type === 'video' ? 'video-mode' : ''}`}>
+      <div className="call-header-modern">
+        {type === "video" ? (
+          <FiVideo size={28} className="call-header-icon" />
+        ) : (
+          <FiHeadphones size={28} className="call-header-icon" />
+        )}
+        <span className="call-header-label">
+          {type === "video" ? "Live Video" : "Voice Call"}
+        </span>
+        <span className="call-header-peer">with {peerUser}</span>
+      </div>
+
+      {type === "video" && (
+        <div className="video-container fullscreen" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', zIndex: 1 }}>
+          <video
+            ref={remoteRef}
+            autoPlay
+            playsInline
+            className="call-video remote-video fullscreen"
+            style={{ width: '100vw', height: '100vh', objectFit: 'cover', position: 'absolute', top: 0, left: 0, zIndex: 1 }}
+          />
+          <video
+            ref={localRef}
+            muted
+            autoPlay
+            playsInline
+            className="call-video local-video"
+            style={{ width: 180, height: 120, position: 'absolute', bottom: 32, right: 32, zIndex: 2, borderRadius: 12, boxShadow: '0 2px 12px rgba(0,0,0,0.3)' }}
+          />
         </div>
+      )}
+
+      {type === "audio" && (
+        <>
+          <div className="call-status">🎧 Audio call in progress...</div>
+          <audio ref={remoteAudioRef} autoPlay playsInline />
+        </>
+      )}
+
+      <div className="call-controls fullscreen-controls" style={{ position: 'fixed', bottom: 32, left: 0, width: '100vw', display: 'flex', justifyContent: 'center', zIndex: 3 }}>
+        <Button
+          variant={micMuted ? "danger" : "light"}
+          onClick={toggleMic}
+          title={micMuted ? "Unmute Microphone" : "Mute Microphone"}
+          aria-label={micMuted ? "Unmute Microphone" : "Mute Microphone"}
+          className="call-btn"
+        >
+          {micMuted ? <FiMicOff size={24} /> : <FiMic size={24} />}
+        </Button>
 
         {type === "video" && (
-          <div className="video-container">
-            <video
-              ref={remoteRef}
-              autoPlay
-              playsInline
-              className="call-video remote-video"
-            />
-            <video
-              ref={localRef}
-              muted
-              autoPlay
-              playsInline
-              className="call-video local-video"
-            />
-          </div>
-        )}
-
-        {type === "audio" && (
-          <>
-            <div className="call-status">🎧 Audio call in progress...</div>
-            <audio ref={remoteAudioRef} autoPlay playsInline />
-          </>
-        )}
-
-        {/* Controls for mute/unmute and video on/off */}
-        <div className="call-controls">
           <Button
-            variant={micMuted ? "danger" : "light"}
-            onClick={toggleMic}
-            title={micMuted ? "Unmute Microphone" : "Mute Microphone"}
-            aria-label={micMuted ? "Unmute Microphone" : "Mute Microphone"}
+            variant={videoOff ? "danger" : "light"}
+            onClick={toggleVideo}
+            title={videoOff ? "Turn Video On" : "Turn Video Off"}
+            aria-label={videoOff ? "Turn Video On" : "Turn Video Off"}
             className="call-btn"
           >
-            {micMuted ? <FiMicOff size={24} /> : <FiMic size={24} />}
+            {videoOff ? <FiVideoOff size={24} /> : <FiVideo size={24} />}
           </Button>
+        )}
 
-          {type === "video" && (
-            <Button
-              variant={videoOff ? "danger" : "light"}
-              onClick={toggleVideo}
-              title={videoOff ? "Turn Video On" : "Turn Video Off"}
-              aria-label={videoOff ? "Turn Video On" : "Turn Video Off"}
-              className="call-btn"
-            >
-              {videoOff ? <FiVideoOff size={24} /> : <FiVideo size={24} />}
-            </Button>
-          )}
-
-          <Button
-            variant="danger"
-            onClick={hangUp}
-            title="Hang Up"
-            aria-label="Hang Up"
-            className="call-btn hangup-btn"
-          >
-            <FiPhoneOff size={24} />
-          </Button>
-        </div>
+        <Button
+          variant="danger"
+          onClick={hangUp}
+          title="Hang Up"
+          aria-label="Hang Up"
+          className="call-btn hangup-btn"
+        >
+          <FiPhoneOff size={24} />
+        </Button>
       </div>
     </div>
-  );
+  </div>
+);
 }
