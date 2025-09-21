@@ -14,6 +14,7 @@ import Utils from "../../shared/Utils";
 import "../../App.css";
 
 import socket from "../../utils/socket";
+import AppCard from "../Common/AppCard";
 
 const apiBaseUrl = process.env.REACT_APP_API_BASE_URL;
 
@@ -68,38 +69,40 @@ function Login() {
   };
 
   return (
-    <Container className="mt-5">
+    <Container className="page-container d-flex align-items-center">
       <Toastr show={toastr.show} onHide={handleOnHide} variant={toastr.variant} title={toastr.title} message={toastr.message} />
-      <Row className="justify-content-center">
-        <Col md={5}>
-          <Form onSubmit={loginHandler}>
-            {/* Username */}
-            <Form.Group className="mb-3" controlId="username">
-              <Form.Label>Username</Form.Label>
-              <Form.Control
-                type="text"
-                placeholder="Enter username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-              />
-            </Form.Group>
+      <Row className="justify-content-center w-100 mx-0">
+        <Col xs={11} sm={9} md={7} lg={5} xl={4}>
+          <AppCard title="Welcome back">
+            <Form onSubmit={loginHandler}>
+              {/* Username */}
+              <Form.Group className="mb-3" controlId="username">
+                <Form.Label>Username</Form.Label>
+                <Form.Control
+                  type="text"
+                  placeholder="Enter username"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                />
+              </Form.Group>
 
-            {/* Password */}
-            <Form.Group className="mb-3" controlId="password">
-              <Form.Label>Password</Form.Label>
-              <Form.Control
-                type="password"
-                placeholder="Enter password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </Form.Group>
+              {/* Password */}
+              <Form.Group className="mb-3" controlId="password">
+                <Form.Label>Password</Form.Label>
+                <Form.Control
+                  type="password"
+                  placeholder="Enter password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+              </Form.Group>
 
-            {/* Login Button */}
-            <Button variant="primary" type="submit" className="w-100" disabled={loading}>
-              {loading ? "Logging in..." : "Login"}
-            </Button>
-          </Form>
+              {/* Login Button */}
+              <Button variant="primary" type="submit" className="w-100" disabled={loading}>
+                {loading ? "Logging in..." : "Login"}
+              </Button>
+            </Form>
+          </AppCard>
         </Col>
       </Row>
     </Container>

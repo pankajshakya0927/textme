@@ -65,14 +65,14 @@ function NavbarOffCanvas() {
 
             {/* Right-side controls */}
             {isLoggedIn && (
-              <ButtonGroup className="d-flex align-items-center">
-                <Button variant="primary" onClick={handleShowAddFriends}>
+              <ButtonGroup>
+                <Button onClick={handleShowAddFriends}>
                   <HiUserAdd size={24} />
                 </Button>
 
                 {/* Notifications Dropdown */}
                 <Dropdown show={showNotificationsDropdown} onToggle={(isOpen) => setShowNotificationsDropdown(isOpen)}>
-                  <Dropdown.Toggle as={Button} variant="primary" className="position-relative">
+                  <Dropdown.Toggle as={Button} className="position-relative">
                     <MdNotifications size={24} />
                     {userNotifications.filter(notification => !notification.isRead).length > 0 && (
                       <Badge bg="danger" pill className="position-absolute" style={{ top: 5, right: 5 }}>
@@ -164,13 +164,9 @@ function NavbarOffCanvas() {
                     <NavDropdown.Item onClick={handleLogout}>Logout</NavDropdown.Item>
                   </NavDropdown>
                 ) : (
-                  <div>
-                    <Button variant="primary" onClick={() => navigateTo("/login")}>
-                      Log in
-                    </Button>
-                    <Button variant="outline-light" onClick={() => navigateTo("/signup")}>
-                      Sign up
-                    </Button>
+                  <div className="d-flex gap-2">
+                    <Button variant="primary" onClick={() => navigateTo("/login")}>Log in</Button>
+                    <Button variant="outline-primary" onClick={() => navigateTo("/signup")}>Sign up</Button>
                   </div>
                 )}
               </Nav>

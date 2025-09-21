@@ -12,6 +12,7 @@ import { BsEye, BsEyeSlash } from "react-icons/bs";
 import Toastr from "../Toastr/Toastr";
 import Utils from "../../shared/Utils";
 import "../../App.css";
+import AppCard from "../Common/AppCard";
 
 const apiBaseUrl = process.env.REACT_APP_API_BASE_URL;
 
@@ -78,51 +79,53 @@ function Signup() {
   };
 
   return (
-    <Container className="mt-5">
+    <Container className="page-container d-flex align-items-center">
       <Toastr show={toastr.show} onHide={handleOnHide} variant={toastr.variant} title={toastr.title} message={toastr.message} />
-      <Row className="justify-content-center">
-        <Col md={6}>
-          <Form onSubmit={signupHandler}>
-            {/* Username */}
-            <Form.Group className="mb-3" controlId="username">
-              <Form.Label>Username</Form.Label>
-              <Form.Control type="text" placeholder="Enter Username" onChange={(e) => setUsername(e.target.value)} />
-              <Form.Text muted>Username should be unique.</Form.Text>
-            </Form.Group>
+      <Row className="justify-content-center w-100 mx-0">
+        <Col xs={11} sm={9} md={7} lg={5} xl={4}>
+          <AppCard title="Create your account">
+            <Form onSubmit={signupHandler}>
+              {/* Username */}
+              <Form.Group className="mb-3" controlId="username">
+                <Form.Label>Username</Form.Label>
+                <Form.Control type="text" placeholder="Enter Username" onChange={(e) => setUsername(e.target.value)} />
+                <Form.Text muted>Username should be unique.</Form.Text>
+              </Form.Group>
 
-            {/* Password */}
-            <Form.Group className="mb-3" controlId="password">
-              <Form.Label>Password</Form.Label>
-              <InputGroup>
-                <Form.Control type={passwordType} placeholder="Enter Password" value={password} onChange={(e) => setPassword(e.target.value)} />
-                <Button variant="outline-secondary" onClick={togglePasswordType}>
-                  {passwordType === "password" ? <BsEyeSlash /> : <BsEye />}
-                </Button>
-              </InputGroup>
-              <Form.Text muted>Password must be at least 6 characters long.</Form.Text>
-            </Form.Group>
+              {/* Password */}
+              <Form.Group className="mb-3" controlId="password">
+                <Form.Label>Password</Form.Label>
+                <InputGroup>
+                  <Form.Control type={passwordType} placeholder="Enter Password" value={password} onChange={(e) => setPassword(e.target.value)} />
+                  <Button variant="outline-secondary" onClick={togglePasswordType}>
+                    {passwordType === "password" ? <BsEyeSlash /> : <BsEye />}
+                  </Button>
+                </InputGroup>
+                <Form.Text muted>Password must be at least 6 characters long.</Form.Text>
+              </Form.Group>
 
-            {/* Security Question */}
-            <Form.Group className="mb-3" controlId="securityQ">
-              <Form.Label>Select a Security Question</Form.Label>
-              <Form.Select onChange={(e) => setSecurityQ(e.target.value)} defaultValue="">
-                <option value="" disabled>Select a question...</option>
-                {securityQs.map((ques, key) => (
-                  <option key={key} value={ques.value}>{ques.label}</option>
-                ))}
-              </Form.Select>
-            </Form.Group>
+              {/* Security Question */}
+              <Form.Group className="mb-3" controlId="securityQ">
+                <Form.Label>Select a Security Question</Form.Label>
+                <Form.Select onChange={(e) => setSecurityQ(e.target.value)} defaultValue="">
+                  <option value="" disabled>Select a question...</option>
+                  {securityQs.map((ques, key) => (
+                    <option key={key} value={ques.value}>{ques.label}</option>
+                  ))}
+                </Form.Select>
+              </Form.Group>
 
-            {/* Security Answer */}
-            <Form.Group className="mb-3" controlId="securityA">
-              <Form.Control type="text" placeholder="Enter your answer" onChange={(e) => setSecurityA(e.target.value)} />
-            </Form.Group>
+              {/* Security Answer */}
+              <Form.Group className="mb-4" controlId="securityA">
+                <Form.Control type="text" placeholder="Enter your answer" onChange={(e) => setSecurityA(e.target.value)} />
+              </Form.Group>
 
-            {/* Submit Button */}
-            <Button variant="primary" type="submit" className="w-100">
-              Sign Up
-            </Button>
-          </Form>
+              {/* Submit Button */}
+              <Button variant="primary" type="submit" className="w-100">
+                Sign Up
+              </Button>
+            </Form>
+          </AppCard>
         </Col>
       </Row>
     </Container>

@@ -1,11 +1,14 @@
 import React, { useContext, useState } from "react";
 import { useHistory } from "react-router-dom";
+import Container from "react-bootstrap/Container";
+import Row from "react-bootstrap/Row";
+import Col from "react-bootstrap/Col";
 import Button from "react-bootstrap/Button";
-import { AiOutlineArrowRight } from "react-icons/ai";
-import { AuthContext } from "../../context/AuthContext";
 import Modal from "react-bootstrap/Modal";
 import Form from "react-bootstrap/Form";
+import { AiOutlineArrowRight } from "react-icons/ai";
 import { v4 as uuidv4 } from "uuid";
+import { AuthContext } from "../../context/AuthContext";
 
 export default function Homepage() {
   const { isLoggedIn } = useContext(AuthContext);
@@ -48,13 +51,42 @@ export default function Homepage() {
   };
 
   return (
-    <div className="d-flex flex-column align-items-center justify-content-center vh-100 text-center">
-      <h1 className="mb-4 fw-bold">
-        Welcome to <span className="text-primary">TextMe</span>!
-      </h1>
-      <p className="text-muted">
-        Stay connected with your friends in real-time.
-      </p>
+    <Container fluid className="page-container d-flex align-items-center">
+      <Container>
+        <Row className="justify-content-center text-center">
+          <Col lg={8} xl={7}>
+            <h1 className="mb-3 fw-bold display-5">
+              Stay connected with <span className="text-primary">TextMe</span>
+            </h1>
+            <p className="text-muted mb-4">
+              Fast, simple, and secure messaging. Hop into your chats or start an anonymous room in seconds.
+            </p>
+
+            {isLoggedIn ? (
+              <div className="d-flex justify-content-center flex-wrap gap-2">
+                <Button variant="primary" className="px-4 py-2" onClick={handleGoToChats}>
+                  Go to Chats <AiOutlineArrowRight />
+                </Button>
+                <Button variant="outline-secondary" className="px-4 py-2" onClick={handleAnonymousChat}>
+                  Chat Anonymously
+                </Button>
+              </div>
+            ) : (
+              <div className="d-flex justify-content-center flex-wrap gap-2">
+                <Button variant="primary" className="px-4 py-2" onClick={handleLogin}>
+                  Login
+                </Button>
+                <Button variant="outline-primary" className="px-4 py-2" onClick={handleSignup}>
+                  Sign Up
+                </Button>
+                <Button variant="outline-secondary" className="px-4 py-2" onClick={handleAnonymousChat}>
+                  Chat Anonymously
+                </Button>
+              </div>
+            )}
+          </Col>
+        </Row>
+      </Container>
 
       <Modal show={showRoomModal} onHide={() => setShowRoomModal(false)} backdrop="static" keyboard={false} centered>
         <Modal.Header closeButton>
@@ -83,35 +115,6 @@ export default function Homepage() {
           </Form>
         </Modal.Body>
       </Modal>
-
-      {isLoggedIn ? (
-        <>
-          <h5>
-            Hi there!{" "}
-            <span role="img" aria-label="wave" className="wave">
-              👋
-            </span>
-          </h5>
-          <Button variant="primary" className="mt-3 px-4 py-2" onClick={handleGoToChats}>
-            Go to Chats <AiOutlineArrowRight />
-          </Button>
-          <Button variant="outline-secondary" className="mt-3 px-4 py-2 ms-2" onClick={handleAnonymousChat}>
-            Chat Anonymously
-          </Button>
-        </>
-      ) : (
-        <div className="mt-3">
-          <Button variant="primary" className="me-2 px-4 py-2" onClick={handleLogin}>
-            Login
-          </Button>
-          <Button variant="outline-primary" className="px-4 py-2" onClick={handleSignup}>
-            Sign Up
-          </Button>
-          <Button variant="outline-secondary" className="px-4 py-2 ms-2" onClick={handleAnonymousChat}>
-            Chat Anonymously
-          </Button>
-        </div>
-      )}
-    </div>
+    </Container>
   );
 }

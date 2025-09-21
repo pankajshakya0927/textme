@@ -14,7 +14,6 @@ import data from '@emoji-mart/data'
 import Picker from '@emoji-mart/react'
 
 import { AuthContext } from "../../context/AuthContext";
-import Toastr from "../Toastr/Toastr";
 import Utils from "../../shared/Utils";
 
 import "./ChatBox.css";
@@ -26,11 +25,14 @@ export default function ChatBox(props) {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
   const options = Utils.getDefaultToastrOptions();
-  const [toastr, setToaster] = useState(options);
-
-  const handleOnHide = () => setToaster(options);
+  // Simplified: no local Toastr here
   const lastMessageRef = useRef(null);
+  const containerRef = useRef(null);
   const typingTimerRef = useRef(null);
+  const didInitialScrollRef = useRef(false);
+  const sentByMeRef = useRef(false);
+  const [atBottom, setAtBottom] = useState(true);
+  const [lastReadIndex, setLastReadIndex] = useState(0);
 
   const currentUser = JSON.parse(Utils.getItemFromLocalStorage("current_user"));
   const username = currentUser?.username;
@@ -58,9 +60,10 @@ export default function ChatBox(props) {
       };
 
       // Optimistic UI update
+      sentByMeRef.current = true;
       props.setMessages(prevMessages => [
         ...prevMessages,
-        { message: message.trim(), from: username, to: props.chatWith }
+        { message: message.trim(), from: username, to: props.chatWith, createdAt: new Date().toISOString() }
       ]);
 
       // Emit the message to the server
@@ -70,11 +73,53 @@ export default function ChatBox(props) {
     }
   };
 
+  // Simplified: no standalone scroll helper, handled inline where needed
+
+  // Smart auto-scroll: only when user is near bottom, after sending, or on initial load
   useEffect(() => {
-    if (lastMessageRef.current) {
-      lastMessageRef.current.scrollIntoView({ behavior: "smooth" });
+    const c = containerRef.current;
+    if (!c) return;
+
+    const distanceFromBottom = c.scrollHeight - c.scrollTop - c.clientHeight;
+    const isNearBottom = distanceFromBottom < 100; // px threshold
+
+    const shouldScroll = sentByMeRef.current || isNearBottom || !didInitialScrollRef.current;
+    if (shouldScroll) {
+      const doScroll = () => {
+        const el = containerRef.current;
+        if (!el) return;
+        el.scrollTop = el.scrollHeight;
+      };
+      // try now, next frame, and after microtask to handle layout timing
+      doScroll();
+      if (typeof requestAnimationFrame === 'function') requestAnimationFrame(doScroll);
+      setTimeout(doScroll, 0);
     }
-  }, [props.messages]);
+
+    // reset flags
+    sentByMeRef.current = false;
+    didInitialScrollRef.current = true;
+    // If we scrolled (or stayed) near bottom, consider all read
+    if (shouldScroll) setLastReadIndex(props.messages.length);
+  }, [props.messages.length]);
+
+  // Reset initial scroll flag when switching chats
+  useEffect(() => {
+    didInitialScrollRef.current = false;
+    setLastReadIndex(props.messages.length);
+  }, [props.chatId, props.chatWith]);
+
+  // Track scroll position and mark as read when reaching bottom
+  const handleScroll = () => {
+    const c = containerRef.current;
+    if (!c) return;
+    const distanceFromBottom = c.scrollHeight - c.scrollTop - c.clientHeight;
+    const isNowAtBottom = distanceFromBottom < 4;
+    setAtBottom(isNowAtBottom);
+    if (isNowAtBottom) {
+      setLastReadIndex(props.messages.length);
+    }
+  };
 
   useEffect(() => {
     const handleTypingStatus = (typingData) => {
@@ -104,11 +149,22 @@ export default function ChatBox(props) {
     setMessage((prev) => prev + emojiChar);
     setShowEmojiPicker(false);
   };
+  
+  // Helpers for date/time formatting
+  const dateKey = (d) => `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;
+  const formatDateChip = (d) => {
+    const today = new Date();
+    const msgDate = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const diffDays = Math.round((todayDate - msgDate) / (1000*60*60*24));
+    if (diffDays === 0) return 'Today';
+    if (diffDays === 1) return 'Yesterday';
+    return new Intl.DateTimeFormat(undefined, { day: '2-digit', month: 'short', year: 'numeric' }).format(d);
+  };
+  const formatTimeOnly = (d) => new Intl.DateTimeFormat(undefined, { hour: '2-digit', minute: '2-digit' }).format(d);
 
   return (
     <>
-      <Toastr show={toastr.show} onHide={handleOnHide} variant={toastr.variant} title={toastr.title} message={toastr.message} />
-
       <Card className="box">
         <Card.Header className="d-flex align-items-center justify-content-between">
           <div className="d-flex align-items-center gap-2">
@@ -135,32 +191,64 @@ export default function ChatBox(props) {
             </ButtonGroup>
           </div>
         </Card.Header>
-        <Card.Body className="overflow-auto chat-box d-flex flex-column">
-          {props.messages.map((msg, key) => (
-            <ListGroup key={key} className={msg.from === username ? "align-items-end mb-2" : "align-items-start mb-2"}>
-              <ListGroup.Item variant={msg.from === username ? "primary" : "light"}>
-                {msg.message}
-              </ListGroup.Item>
-            </ListGroup>
-          ))}
+        <Card.Body ref={containerRef} onScroll={handleScroll} className="overflow-auto chat-box d-flex flex-column">
+          {(() => {
+            const items = [];
+            let lastDate = null;
+            for (let i = 0; i < props.messages.length; i++) {
+              const msg = props.messages[i];
+              const created = new Date(msg.createdAt || Date.now());
+              const thisKey = dateKey(created);
+              if (lastDate !== thisKey) {
+                items.push(
+                  <div key={`date-${thisKey}-${i}`} className="date-divider" role="separator" aria-label={formatDateChip(created)}>
+                    <span className="chip">{formatDateChip(created)}</span>
+                  </div>
+                );
+                lastDate = thisKey;
+              }
+              if (!atBottom && lastReadIndex === i) {
+                items.push(
+                  <div key={`unread-${i}`} className="new-messages-divider" role="separator" aria-label="New messages">
+                    <span className="line" />
+                    <span>New messages</span>
+                    <span className="line" />
+                  </div>
+                );
+              }
+              items.push(
+                <ListGroup key={i} className={msg.from === username ? "align-items-end mb-2" : "align-items-start mb-2"}>
+                  <ListGroup.Item variant={msg.from === username ? "primary" : "light"}>
+                    <div>{msg.message}</div>
+                    <div className={msg.from === username ? "msg-meta text-end" : "msg-meta text-start"}>
+                      <small className="text-muted">{formatTimeOnly(created)}</small>
+                    </div>
+                  </ListGroup.Item>
+                </ListGroup>
+              );
+            }
+            return items;
+          })()}
           <div ref={lastMessageRef}></div>
         </Card.Body>
         <Card.Footer>
           <Form>
             <InputGroup>
-              <div style={{ position: 'relative' }}>
-                <Button variant="outline-secondary" type="button" onClick={() => setShowEmojiPicker((v) => !v)}>
-                  <BiSmile size={20} />
-                </Button>
+              <div className="position-relative">
+                <ButtonGroup className="me-2">
+                  <Button variant="outline-secondary" type="button" onClick={() => setShowEmojiPicker((v) => !v)}>
+                    <BiSmile size={20} />
+                  </Button>
+                  <Button variant="outline-secondary" type="button">
+                    <GrAttachment size={17} />
+                  </Button>
+                </ButtonGroup>
                 {showEmojiPicker && (
-                  <div style={{ position: 'absolute', bottom: '40px', zIndex: 1000, left: 0 }}>
+                  <div style={{ position: 'absolute', bottom: '44px', zIndex: 1000, left: 0 }}>
                     <Picker data={data} onEmojiSelect={handleEmojiSelect} theme="light" />
                   </div>
                 )}
               </div>
-              <Button variant="outline-secondary">
-                <GrAttachment size={17} />
-              </Button>
               <Form.Control
                 placeholder="Enter message..."
                 aria-label="Enter message"

@@ -53,3 +53,12 @@ html, body, #root {
   height: 100%;
   min-height: 0;
 }
+
+/* Pages: center content accounting for sticky navbar height */
+:root {
+  --navbar-height: 56px; /* bootstrap default navbar height */
+}
+
+.page-container {
+  min-height: calc(100vh - var(--navbar-height));
+}
