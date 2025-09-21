@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useCallback, useState } from "react";
 import { Button } from "react-bootstrap";
+import { Rnd } from "react-rnd";
 import { FiMic, FiMicOff, FiVideo, FiVideoOff, FiPhoneOff, FiHeadphones } from "react-icons/fi";
 import "./CallWindow.css";
 
@@ -263,14 +264,27 @@ export default function CallWindow({ type, onClose, socket, peerUser, isCaller, 
             className="call-video remote-video fullscreen"
             style={{ width: '100vw', height: '100vh', objectFit: 'cover', position: 'absolute', top: 0, left: 0, zIndex: 1 }}
           />
-          <video
-            ref={localRef}
-            muted
-            autoPlay
-            playsInline
-            className="call-video local-video"
-            style={{ width: 180, height: 120, position: 'absolute', bottom: 32, right: 32, zIndex: 2, borderRadius: 12, boxShadow: '0 2px 12px rgba(0,0,0,0.3)' }}
-          />
+          {/* Draggable local PiP */}
+          <Rnd
+            bounds="window"
+            enableResizing={false}
+            default={{
+              x: typeof window !== 'undefined' ? window.innerWidth - 180 - 32 : 16,
+              y: typeof window !== 'undefined' ? window.innerHeight - 120 - 32 : 16,
+              width: 180,
+              height: 120
+            }}
+            style={{ zIndex: 2, position: 'fixed' }}
+          >
+            <video
+              ref={localRef}
+              muted
+              autoPlay
+              playsInline
+              className="call-video local-video"
+              style={{ width: '100%', height: '100%', borderRadius: 12, boxShadow: '0 2px 12px rgba(0,0,0,0.3)' }}
+            />
+          </Rnd>
         </div>
       )}
 

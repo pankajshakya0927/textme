@@ -140,13 +140,13 @@
 .call-header-label {
   font-size: 1.25rem;
   font-weight: 600;
-  color: #222;
+  /* color: #222; */
   margin-bottom: 0.1rem;
 }
 
 .call-header-peer {
   font-size: 1rem;
-  color: #666;
+  /* color: #666; */
   font-weight: 400;
 }
 
