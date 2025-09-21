@@ -23,16 +23,13 @@ export default function ChatBox(props) {
   const [message, setMessage] = useState("");
   const [typingStatus, setTypingStatus] = useState("");
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-
-  const options = Utils.getDefaultToastrOptions();
   // Simplified: no local Toastr here
   const lastMessageRef = useRef(null);
   const containerRef = useRef(null);
   const typingTimerRef = useRef(null);
   const didInitialScrollRef = useRef(false);
   const sentByMeRef = useRef(false);
-  const [atBottom, setAtBottom] = useState(true);
-  const [lastReadIndex, setLastReadIndex] = useState(0);
+  
 
   const currentUser = JSON.parse(Utils.getItemFromLocalStorage("current_user"));
   const username = currentUser?.username;
@@ -99,27 +96,14 @@ export default function ChatBox(props) {
     // reset flags
     sentByMeRef.current = false;
     didInitialScrollRef.current = true;
-    // If we scrolled (or stayed) near bottom, consider all read
-    if (shouldScroll) setLastReadIndex(props.messages.length);
   }, [props.messages.length]);
 
   // Reset initial scroll flag when switching chats
   useEffect(() => {
     didInitialScrollRef.current = false;
-    setLastReadIndex(props.messages.length);
   }, [props.chatId, props.chatWith]);
 
-  // Track scroll position and mark as read when reaching bottom
-  const handleScroll = () => {
-    const c = containerRef.current;
-    if (!c) return;
-    const distanceFromBottom = c.scrollHeight - c.scrollTop - c.clientHeight;
-    const isNowAtBottom = distanceFromBottom < 4;
-    setAtBottom(isNowAtBottom);
-    if (isNowAtBottom) {
-      setLastReadIndex(props.messages.length);
-    }
-  };
+  // No special scroll handling needed now
 
   useEffect(() => {
     const handleTypingStatus = (typingData) => {
@@ -191,7 +175,7 @@ export default function ChatBox(props) {
             </ButtonGroup>
           </div>
         </Card.Header>
-        <Card.Body ref={containerRef} onScroll={handleScroll} className="overflow-auto chat-box d-flex flex-column">
+  <Card.Body ref={containerRef} className="overflow-auto chat-box d-flex flex-column">
           {(() => {
             const items = [];
             let lastDate = null;
@@ -207,15 +191,7 @@ export default function ChatBox(props) {
                 );
                 lastDate = thisKey;
               }
-              if (!atBottom && lastReadIndex === i) {
-                items.push(
-                  <div key={`unread-${i}`} className="new-messages-divider" role="separator" aria-label="New messages">
-                    <span className="line" />
-                    <span>New messages</span>
-                    <span className="line" />
-                  </div>
-                );
-              }
+              // new-messages divider removed
               items.push(
                 <ListGroup key={i} className={msg.from === username ? "align-items-end mb-2" : "align-items-start mb-2"}>
                   <ListGroup.Item variant={msg.from === username ? "primary" : "light"}>

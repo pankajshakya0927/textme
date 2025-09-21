@@ -110,21 +110,7 @@
     font-size: 0.75rem; /* smaller than message text */
 }
 
-.new-messages-divider {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    color: #6c757d; /* bootstrap secondary */
-    margin: 6px 0;
-    font-size: 0.85rem;
-}
-
-.new-messages-divider .line {
-    flex: 1;
-    height: 1px;
-    background: rgba(0,0,0,0.1);
-}
+/* new-messages divider removed */
 
 .date-divider {
     display: flex;
