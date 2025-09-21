@@ -84,6 +84,7 @@ export default function CallWindow({ type, onClose, socket, peerUser, isCaller, 
   };
 
   useEffect(() => {
+    console.log('[RTC] Mount CallWindow type=', type, 'peerUser=', peerUser, 'isCaller=', isCaller);
     const rtc = new RTCPeerConnection({
       iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
     });
@@ -92,26 +93,34 @@ export default function CallWindow({ type, onClose, socket, peerUser, isCaller, 
     rtc.onicecandidate = (event) => {
       if (event.candidate) {
         // Send ICE candidate to the remote peer via socket
+        console.log('[RTC] sending ICE candidate');
         socket.emit("ice-candidate", { to: peerUser, candidate: event.candidate });
       }
     };
 
     rtc.ontrack = (event) => {
+      console.log('[RTC] remote track:', event.track?.kind);
       // Handle remote media stream once received
       const [stream] = event.streams;
       if (type === "video" && remoteRef.current) {
         remoteRef.current.srcObject = stream;
+        const p = remoteRef.current.play?.();
+        if (p && typeof p.catch === 'function') p.catch(() => {});
+        console.log('[RTC] remote video stream set');
       } else if (type === "audio" && remoteAudioRef.current) {
         remoteAudioRef.current.srcObject = stream;
+        console.log('[RTC] remote audio stream set');
       }
     };
 
     rtc.onconnectionstatechange = () => {
       // Monitor connection state changes for debugging or UI updates
+      console.log('[RTC] connection state:', rtc.connectionState);
     };
 
     // Setup local media stream and establish WebRTC connection
     const setupStreamAndConnect = async () => {
+      console.log('[RTC] getting user media…');
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
           video: type === "video",
@@ -128,6 +137,7 @@ export default function CallWindow({ type, onClose, socket, peerUser, isCaller, 
           }
         });
         window.localStream = stream;
+  console.log('[RTC] got local stream:', stream.getTracks().map(t=>t.kind).join(','));
 
         if (type === "audio") {
           stream.getAudioTracks().forEach(track => {
@@ -138,27 +148,36 @@ export default function CallWindow({ type, onClose, socket, peerUser, isCaller, 
         // Attach the local media stream to the local video element
         if (localRef.current) {
           localRef.current.srcObject = stream;
+          console.log('[RTC] local stream set on element');
         }
 
         // Add local media tracks to the RTCPeerConnection
         stream.getTracks().forEach(track => {
           rtc.addTrack(track, stream);
+          console.log('[RTC] added track:', track.kind);
         });
 
         if (isCaller) {
           // Create and send an offer if this client is the caller
+          console.log('[RTC] creating offer (caller)');
           const offer = await rtc.createOffer();
           await rtc.setLocalDescription(offer);
+          console.log('[RTC] localDescription set (caller)');
           sendCallLog({ callStatus: 'started' });
           window.callStartTime = Date.now(); // Start timer for caller
           socket.emit("call-user", { to: peerUser, offer, callType: type });
+          console.log('[RTC] emitted call-user');
         } else if (offer) {
           // Set remote description with offer and send an answer if receiver
+          console.log('[RTC] setting remoteDescription from offer (receiver)');
           await rtc.setRemoteDescription(new RTCSessionDescription(offer));
+          console.log('[RTC] remoteDescription set (receiver)');
           const answer = await rtc.createAnswer();
           await rtc.setLocalDescription(answer);
+          console.log('[RTC] localDescription set with answer (receiver)');
           window.callStartTime = Date.now(); // Start timer for receiver too
           socket.emit("make-answer", { to: peerUser, answer });
+          console.log('[RTC] emitted make-answer');
         }
       } catch (err) {
         console.error("Media or SDP error:", err);
@@ -169,22 +188,25 @@ export default function CallWindow({ type, onClose, socket, peerUser, isCaller, 
     // Listen for answer from remote peer (caller side)
     const handleAnswerMade = async ({ from, answer }) => {
       if (from !== peerUser) return;
+      console.log('[RTC] received answer from', from);
       try {
         // Set remote description with received answer
         await rtc.setRemoteDescription(new RTCSessionDescription(answer));
+        console.log('[RTC] remoteDescription set from answer');
       } catch (err) {
-        // Ignore errors
+        console.log('[RTC] setRemoteDescription(answer) error:', err?.message);
       }
     };
 
     // Listen for ICE candidates from remote peer
     const handleIceCandidate = async ({ from, candidate }) => {
       if (from !== peerUser) return;
+      console.log('[RTC] received ICE candidate from', from);
       try {
         // Add the received ICE candidate to the RTCPeerConnection
         await rtc.addIceCandidate(new RTCIceCandidate(candidate));
       } catch (e) {
-        // Ignore errors
+        console.log('[RTC] addIceCandidate error (often harmless):', e?.message);
       }
     };
 

@@ -61,10 +61,12 @@ io.on("connection", (socket) => {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
       socket.user = decoded; // Attach user info to socket instance
       isAuthenticated = true;
-      connectedUsers.push({
-        socketId: socket.id,
-        username: decoded.username
-      });
+      // Deduplicate by username to avoid stale socketIds for the same user
+      const existingIndex = connectedUsers.findIndex(u => u.username === decoded.username);
+      if (existingIndex !== -1) {
+        connectedUsers.splice(existingIndex, 1);
+      }
+      connectedUsers.push({ socketId: socket.id, username: decoded.username });
     } catch (err) {
       console.log("Invalid token:", err.message);
       return socket.disconnect();
@@ -78,6 +80,14 @@ io.on("connection", (socket) => {
 
   // Anonymous chatroom events (always registered)
   anonymousHandlers(io, socket, anonymousRooms);
+
+  // Cleanup on disconnect: remove this socket from connected users
+  socket.on("disconnect", () => {
+    if (socket.user?.username) {
+      const idx = connectedUsers.findIndex(u => u.socketId === socket.id);
+      if (idx !== -1) connectedUsers.splice(idx, 1);
+    }
+  });
 });
 
 server.listen(port, (error) => {
